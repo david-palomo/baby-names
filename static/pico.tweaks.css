@@ -1,0 +1,97 @@
+:root {
+    --pico-font-size: 100%;
+}
+
+@media only screen and (min-width: 768px) {
+    :root {
+        --pico-font-size: 110%;
+    }
+}
+
+:where(:root),
+article,
+button,
+input,
+select,
+textarea {
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label {
+    transition: color 0.2s ease-in-out;
+}
+
+body {
+    overscroll-behavior-y: contain;
+}
+
+article,
+.card {
+    border: 2px solid var(--pico-border-color);
+    margin-bottom: 0;
+}
+
+.card {
+    border-radius: var(--pico-border-radius);
+    background: var(--pico-card-background-color);
+    box-shadow: var(--pico-card-box-shadow);
+}
+
+.container {
+    max-width: 100%;
+    padding-inline: var(--pico-spacing);
+}
+
+.toggle-sun {
+    display: var(--pico-display-sun);
+}
+
+.toggle-moon {
+    display: var(--pico-display-moon);
+}
+
+/* Light color scheme (Default) */
+/* Can be forced with data-theme="light" */
+[data-theme=light],
+:root:not([data-theme=dark]) {
+    --pico-ok: #008563;
+    --pico-ok-bg: #008563;
+    --pico-error-bg: #c72240;
+    --pico-error-hover: #e2004b;
+    --pico-border-color: #e2e5e8;
+    --pico-display-moon: none;
+    --pico-display-sun: block;
+}
+
+/* Dark color scheme (Auto) */
+/* Automatically enabled if user has Dark mode enabled */
+@media only screen and (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --pico-ok: #00c482;
+        --pico-ok-bg: #22926d5b;
+        --pico-error-bg: #e2004bc0;
+        --pico-error-hover: #e2004b;
+        --pico-border-color: #2a3140;
+        --pico-display-moon: block;
+        --pico-display-sun: none;
+    }
+}
+
+/* Dark color scheme (Forced) */
+/* Enabled if forced with data-theme="dark" */
+[data-theme=dark] {
+    --pico-ok: #00c482;
+    --pico-ok-bg: #22926d5b;
+    --pico-error-bg: #e2004bc0;
+    --pico-error-hover: #e2004b;
+    --pico-border-color: #2a3140;
+    --pico-display-moon: block;
+    --pico-display-sun: none;
+}
