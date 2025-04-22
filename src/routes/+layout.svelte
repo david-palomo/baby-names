@@ -1,22 +1,24 @@
 <script lang="ts">
 	import '../app.css';
 	import { Moon, SunMedium } from 'lucide-svelte';
-	import { IconBrandGithub as Github } from '@tabler/icons-svelte';
 	import { browser } from '$app/environment';
 	import Marquee from '$lib/components/Marquee.svelte';
 	import { names as items } from '$lib/data';
+	import { supabase } from '$lib/supabase';
+	import { store } from '$lib/store.svelte';
+	import { onMount } from 'svelte';
 	import {
 		githubLink,
-		githubRepo,
 		githubUser,
 		projectTitleAbove,
 		projectTitle,
 		projectTitleBelow
 	} from '$lib/config';
 	import Link from '$lib/components/Link.svelte';
-	let { children } = $props();
 
+	let { children } = $props();
 	let theme: string;
+
 	if (browser) {
 		theme =
 			document.documentElement.dataset.theme ||
@@ -27,6 +29,26 @@
 		else theme = 'light';
 		document.documentElement.dataset.theme = theme;
 		document.cookie = `preferredColorScheme=${theme};path=/;max-age=31536000`;
+	}
+	onMount(async () => {
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
+		if (!session) {
+			const { data, error } = await supabase.auth.signInAnonymously();
+			if (error) console.error('Error creating anonymous user:', error);
+			console.log('Anonymous user:', data.user?.id, 'with email: ', data.user?.email);
+			store.user = data.user;
+		} else {
+			console.log('Logged user:', session.user.id, 'with email: ', session.user.email);
+			store.user = session.user;
+		}
+	});
+
+	async function signOut() {
+		const { error } = await supabase.auth.signOut();
+		if (error) console.error('Error signing out:', error);
+		store.user = null;
 	}
 </script>
 
@@ -55,7 +77,13 @@
 				</li>
 			</ul>
 			<ul>
-				<li><a class="secondary" href="{githubLink}/{githubUser}/{githubRepo}"><Github /></a></li>
+				{#if store.user?.is_anonymous === false}
+					<li>
+						<button class="as-link" onclick={signOut}>Sign out</button>
+					</li>
+				{:else}
+					<li><a class="secondary" href="/auth/login">Log in</a></li>
+				{/if}
 			</ul>
 		</nav>
 
@@ -64,10 +92,6 @@
 		</article>
 
 		{@render children()}
-
-		<article class="mb-5 select-none px-0 py-2">
-			<Marquee {items} duration={140} />
-		</article>
 
 		<article class="p-8 sm:px-12 sm:py-10">
 			<h2 class="py-1 font-sans text-xl font-bold opacity-90">How does it work?</h2>

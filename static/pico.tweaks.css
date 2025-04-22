@@ -13,7 +13,8 @@ article,
 button,
 input,
 select,
-textarea {
+textarea,
+.border-anim {
     transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
@@ -30,6 +31,10 @@ label {
 
 body {
     overscroll-behavior-y: contain;
+}
+
+[type="button"].outline:hover {
+    background-color: var(--pico-outline-bg-hover);
 }
 
 article,
@@ -66,6 +71,7 @@ article,
     --pico-error-bg: #c72240;
     --pico-error-hover: #e2004b;
     --pico-border-color: #e2e5e8;
+    --pico-outline-bg-hover: #e2e5e825;
     --pico-display-moon: none;
     --pico-display-sun: block;
 }
@@ -79,6 +85,7 @@ article,
         --pico-error-bg: #e2004bc0;
         --pico-error-hover: #e2004b;
         --pico-border-color: #2a3140;
+        --pico-outline-bg-hover: var(--pico-background-color);
         --pico-display-moon: block;
         --pico-display-sun: none;
     }
@@ -92,6 +99,7 @@ article,
     --pico-error-bg: #e2004bc0;
     --pico-error-hover: #e2004b;
     --pico-border-color: #2a3140;
+    --pico-outline-bg-hover: var(--pico-background-color);
     --pico-display-moon: block;
     --pico-display-sun: none;
 }
