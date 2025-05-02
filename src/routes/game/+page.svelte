@@ -1,5 +1,33 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import { supabase } from '$lib/supabase';
+	import type { PostgrestError } from '@supabase/supabase-js';
+	import { onMount } from 'svelte';
+	import { Users } from 'lucide-svelte';
+
+	let previousSwipes: { name: string; liked: boolean }[] = [];
+	let matches: { name: string }[] = [];
+	let loading = true;
+	let errorMessage = '';
+
+	async function fetchData() {
+		loading = true;
+		errorMessage = '';
+
+		try {
+			const { data, error } = await supabase.from('v_swipes').select('name, liked').limit(12);
+			if (error) throw error;
+			if (data) {
+				previousSwipes = data;
+				matches = data.filter((swipe) => swipe.liked);
+			}
+		} catch (err) {
+			errorMessage = (err as PostgrestError).message;
+		} finally {
+			loading = false;
+		}
+	}
+	onMount(fetchData);
 </script>
 
 <div in:fly>
@@ -10,6 +38,44 @@
 		<div class="flex space-x-4 pt-6">
 			<button type="button" class="error-btn w-24 px-4 py-2 text-lg font-bold">no</button>
 			<button type="button" class="w-24 px-4 py-2 text-lg font-bold">yes</button>
+		</div>
+	</article>
+
+	<article class="flex justify-between gap-4 p-8 sm:px-12 sm:py-10">
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-1">
+				<p class="text-lg font-bold">Previous Swipes</p>
+				<p class="text-sm text-[var(--pico-muted-color)]">(tap a name to repeat the swipe)</p>
+			</div>
+			<ul>
+				{#each previousSwipes as swipe}
+					<button
+						class="block border-0 py-1
+							{swipe.liked ? 'text-[var(--pico-ok)]' : 'line-through decoration-2 opacity-50'}
+							hover:text-[var(--pico-accent2)]
+							hover:underline
+							hover:opacity-100"
+					>
+						{swipe.name}
+					</button>
+				{/each}
+			</ul>
+			<button
+				class="flex items-center gap-3 border-0 py-1 text-[var(--pico-accent2)] hover:underline"
+			>
+				<span class="text-sm">... see more</span>
+			</button>
+		</div>
+		<div class="flex flex-col gap-4 text-right">
+			<div class="flex flex-col gap-1">
+				<p class="text-lg font-bold">Matches</p>
+				<p class="text-sm text-[var(--pico-muted-color)]">(names you both liked)</p>
+			</div>
+			<ul class="flex flex-col text-right">
+				{#each matches as match}
+					<li class="list-none font-medium text-[var(--pico-ok)]">{match.name}</li>
+				{/each}
+			</ul>
 		</div>
 	</article>
 </div>

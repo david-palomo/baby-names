@@ -14,10 +14,12 @@ button,
 input,
 select,
 textarea,
+.card,
 .border-anim {
     transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
+a,
 p,
 h1,
 h2,
@@ -31,6 +33,10 @@ label {
 
 body {
     overscroll-behavior-y: contain;
+}
+
+[type="button"].outline {
+    border: 2px solid var(--pico-form-element-border-color);
 }
 
 [type="button"].outline:hover {
@@ -68,12 +74,16 @@ article,
 :root:not([data-theme=dark]) {
     --pico-ok: #008563;
     --pico-ok-bg: #008563;
+    --pico-accent2: #c89c0c;
+    --pico-error: #c72240;
     --pico-error-bg: #c72240;
     --pico-error-hover: #e2004b;
     --pico-border-color: #e2e5e8;
+    --pico-border-color-aux: #e2e5e8;
     --pico-outline-bg-hover: #e2e5e825;
     --pico-display-moon: none;
-    --pico-display-sun: block;
+    --pico-display-sun: flex;
+    --pico-font-family-sans-serif: inherit;
 }
 
 /* Dark color scheme (Auto) */
@@ -82,12 +92,16 @@ article,
     :root:not([data-theme]) {
         --pico-ok: #00c482;
         --pico-ok-bg: #22926d5b;
+        --pico-accent2: #e2b930;
+        --pico-error: #f40957;
         --pico-error-bg: #e2004bc0;
         --pico-error-hover: #e2004b;
         --pico-border-color: #2a3140;
+        --pico-border-color-aux: #2a3140;
         --pico-outline-bg-hover: var(--pico-background-color);
-        --pico-display-moon: block;
+        --pico-display-moon: flex;
         --pico-display-sun: none;
+        --pico-font-family-sans-serif: inherit;
     }
 }
 
@@ -96,10 +110,14 @@ article,
 [data-theme=dark] {
     --pico-ok: #00c482;
     --pico-ok-bg: #22926d5b;
+    --pico-accent2: #e2b930;
+    --pico-error: #f40957;
     --pico-error-bg: #e2004bc0;
     --pico-error-hover: #e2004b;
     --pico-border-color: #2a3140;
+    --pico-border-color-aux: #2a3140;
     --pico-outline-bg-hover: var(--pico-background-color);
-    --pico-display-moon: block;
+    --pico-display-moon: flex;
     --pico-display-sun: none;
+    --pico-font-family-sans-serif: inherit;
 }

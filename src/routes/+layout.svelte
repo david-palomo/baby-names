@@ -60,29 +60,40 @@
 	<main class="container flex max-w-3xl flex-grow flex-col pb-14 2xs:pb-16">
 		<nav class="mx-2 py-4">
 			<ul>
-				<li>
-					<button class="as-link" onclick={toggleTheme}>
-						<div class="toggle-sun"><SunMedium /></div>
-						<div class="toggle-moon"><Moon /></div>
+				<li class="px-0">
+					<button
+						class="card border-[var(--pico-border-color-aux)] hover:border-[var(--pico-primary-border)]"
+						title="Toggle theme"
+						onclick={toggleTheme}
+					>
+						<div class="toggle-sun gap-2"><SunMedium /></div>
+						<div class="toggle-moon gap-2"><Moon /></div>
 					</button>
+					<div class="xs:px-12"></div>
 				</li>
 			</ul>
 			<ul>
 				<li class="py-0">
 					<a href="/" class="my-0.5 flex flex-col items-center font-bold lg:my-1">
 						<span class="text-xs uppercase text-[var(--pico-primary)]">{projectTitleAbove}</span>
-						<span class="flex items-center space-x-2 text-2xl lowercase">{projectTitle}</span>
+						<span class="flex items-center space-x-2 text-xl lowercase 2xs:text-2xl"
+							>{projectTitle}</span
+						>
 						<span class="text-xs uppercase text-[var(--pico-primary)]">{projectTitleBelow}</span>
 					</a>
 				</li>
 			</ul>
 			<ul>
 				{#if store.user?.is_anonymous === false}
-					<li>
-						<button class="as-link" onclick={signOut}>Sign out</button>
-					</li>
+					<button class="as-link" onclick={signOut}>Sign out</button>
 				{:else}
-					<li><a class="secondary" href="/auth/login">Log in</a></li>
+					<a
+						class="card flex items-center gap-2 px-2 py-1 hover:border-[var(--pico-primary-border)] xs:px-1 xs:pl-3"
+						title="Log in"
+						href="/auth/login"
+					>
+						<span class="hidden xs:inline">Log in </span><span class="text-xl xs:text-lg">🔒</span>
+					</a>
 				{/if}
 			</ul>
 		</nav>
@@ -92,25 +103,16 @@
 		</article>
 
 		{@render children()}
-
-		<article class="p-8 sm:px-12 sm:py-10">
-			<h2 class="py-1 font-sans text-xl font-bold opacity-90">How does it work?</h2>
-			<ul class="list-emoji list-disc pl-6 pt-4 text-[var(--pico-muted-color)]">
-				<li style="--marker-content: '👉'">Swipe right if you like a name</li>
-				<li style="--marker-content: '👈'">Swipe left if you don't</li>
-				<li style="--marker-content: '🔒'">Sign in to save your swipes</li>
-				<li style="--marker-content: '💑'">Connect with a partner to see your matched names</li>
-			</ul>
-		</article>
 	</main>
 
-	<footer class="absolute bottom-0 h-14 w-full 2xs:h-16">
-		<div class="m-auto flex max-w-3xl justify-between px-2 pt-3 text-sm 2xs:pt-4">
-			<p class="mx-2 text-[var(--pico-muted-color)] 2xs:mx-4">
+	<footer class="absolute bottom-0 h-16 w-full">
+		<div class="m-auto flex max-w-3xl justify-between px-2 pt-6 text-sm">
+			<p class="mx-3 text-[var(--pico-muted-color)]">
 				Built by <Link href="{githubLink}/{githubUser}" className="secondary">{githubUser}</Link>
 			</p>
-			<p class="mx-2 text-[var(--pico-muted-color)] 2xs:mx-4">
+			<p class="mx-3 hidden text-[var(--pico-muted-color)] 2xs:inline-block">
 				Powered by <Link href="https://svelte.dev" className="secondary">Svelte</Link>
+				& <Link href="https://supabase.com" className="secondary">Supabase</Link>
 			</p>
 		</div>
 	</footer>
@@ -126,8 +128,5 @@
 			calc(var(--pico-nav-link-spacing-horizontal) * -1);
 		padding: var(--pico-nav-link-spacing-vertical) var(--pico-nav-link-spacing-horizontal);
 		border: 0;
-	}
-	.list-emoji li::marker {
-		content: var(--marker-content) '  ';
 	}
 </style>

@@ -14,4 +14,20 @@
 		<p class="text-sm text-[var(--pico-muted-color)]">Or if you just met 👀</p>
 		<a href="/game" role="button" class="mt-12 py-2 text-lg">start swiping ✨</a>
 	</article>
+
+	<article class="p-8 sm:px-12 sm:py-10">
+		<h2 class="py-1 text-xl font-bold opacity-90">How does it work?</h2>
+		<ul class="list-emoji list-disc pl-6 pt-4 text-[var(--pico-muted-color)]">
+			<li style="--marker-content: '👉'">Swipe right if you like a name</li>
+			<li style="--marker-content: '👈'">Swipe left if you don't</li>
+			<li style="--marker-content: '🔒'">Sign in to save your swipes</li>
+			<li style="--marker-content: '💑'">Connect with a partner to see your matched names</li>
+		</ul>
+	</article>
 </div>
+
+<style>
+	.list-emoji li::marker {
+		content: var(--marker-content) '  ';
+	}
+</style>
