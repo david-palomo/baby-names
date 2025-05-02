@@ -69,7 +69,7 @@
 						<div class="toggle-sun gap-2"><SunMedium /></div>
 						<div class="toggle-moon gap-2"><Moon /></div>
 					</button>
-					<div class="xs:px-12"></div>
+					<div class={store.user?.is_anonymous === false ? 'xs:px-14' : 'xs:px-12'}></div>
 				</li>
 			</ul>
 			<ul>
@@ -85,14 +85,21 @@
 			</ul>
 			<ul>
 				{#if store.user?.is_anonymous === false}
-					<button class="as-link" onclick={signOut}>Sign out</button>
+					<button
+						class="card border-[var(--pico-border-color-aux)] py-1 pl-1.5 pr-2.5 hover:border-[var(--pico-error-bg)] xs:pl-3 xs:pr-2"
+						onclick={signOut}
+					>
+						<span class="hidden xs:inline">Sign out</span>
+						<span class="text-xl xs:text-lg">👋</span>
+					</button>
 				{:else}
 					<a
 						class="card flex items-center gap-2 px-2 py-1 hover:border-[var(--pico-primary-border)] xs:px-1 xs:pl-3"
 						title="Log in"
 						href="/auth/login"
 					>
-						<span class="hidden xs:inline">Log in </span><span class="text-xl xs:text-lg">🔒</span>
+						<span class="hidden xs:inline">Log in</span>
+						<span class="text-xl xs:text-lg">🔒</span>
 					</a>
 				{/if}
 			</ul>
