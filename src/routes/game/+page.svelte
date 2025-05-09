@@ -45,7 +45,7 @@
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col gap-1">
 				<p class="text-lg font-bold">Previous Swipes</p>
-				<p class="text-sm text-[var(--pico-muted-color)]">(tap a name to repeat the swipe)</p>
+				<p class="text-sm text-[var(--pico-muted-color)]">(tap a name to re-swipe)</p>
 			</div>
 			<ul>
 				{#each previousSwipes as swipe}
@@ -60,11 +60,9 @@
 					</button>
 				{/each}
 			</ul>
-			<button
-				class="flex items-center gap-3 border-0 py-1 text-[var(--pico-accent2)] hover:underline"
-			>
+			<a href="/swipes" class="text-[var(--pico-accent2)] hover:underline">
 				<span class="text-sm">... see more</span>
-			</button>
+			</a>
 		</div>
 		<div class="flex flex-col gap-4 text-right">
 			<div class="flex flex-col gap-1">
