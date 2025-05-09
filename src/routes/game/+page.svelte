@@ -1,79 +1,90 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { supabase } from '$lib/supabase';
-	import type { PostgrestError } from '@supabase/supabase-js';
-	import { onMount } from 'svelte';
-	import { Users } from 'lucide-svelte';
+	import { Users, Undo, Heart, Settings } from 'lucide-svelte';
+	import { IconBrandTinder } from '@tabler/icons-svelte';
+	import { store } from '$lib/store.svelte';
 
-	let previousSwipes: { name: string; liked: boolean }[] = [];
-	let matches: { name: string }[] = [];
-	let loading = true;
-	let errorMessage = '';
+	let previousSwipes: { name: string; liked: boolean }[] = $state([]);
+	let errorMessage = $state('');
+	let loadingSwipes = $state(true);
 
 	async function fetchData() {
-		loading = true;
 		errorMessage = '';
-
-		try {
-			const { data, error } = await supabase.from('v_swipes').select('name, liked').limit(12);
-			if (error) throw error;
-			if (data) {
-				previousSwipes = data;
-				matches = data.filter((swipe) => swipe.liked);
-			}
-		} catch (err) {
-			errorMessage = (err as PostgrestError).message;
-		} finally {
-			loading = false;
-		}
+		const { data, error } = await supabase.from('v_swipes').select('name, liked').limit(16);
+		if (error) errorMessage = error?.message;
+		else previousSwipes = data;
+		loadingSwipes = false;
 	}
-	onMount(fetchData);
+	$effect(() => {
+		store.user;
+		fetchData();
+	});
 </script>
 
 <div in:fly>
 	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
 		<p class="flex h-20 items-center text-3xl font-bold">John</p>
-		<button type="button" class="py-1 text-xs font-bold outline">+ info</button>
+		<div class="flex w-full justify-center gap-4">
+			<button type="button" class="py-1 text-[var(--pico-accent2)] outline">
+				<Undo size={20} />
+			</button>
+			<button type="button" class="py-1 text-xs font-bold outline">+ info</button>
+		</div>
 		<div class="flex space-x-4 pt-6">
 			<button type="button" class="error-btn w-24 px-4 py-2 text-lg font-bold">no</button>
 			<button type="button" class="w-24 px-4 py-2 text-lg font-bold">yes</button>
 		</div>
 	</article>
 
-	<article class="flex justify-between gap-4 p-8 sm:px-12 sm:py-10">
-		<div class="flex flex-col gap-4">
-			<div class="flex flex-col gap-1">
-				<p class="text-lg font-bold">Previous Swipes</p>
-				<p class="text-sm text-[var(--pico-muted-color)]">(tap a name to re-swipe)</p>
-			</div>
-			<ul>
+	<div class="mb-6 flex gap-4">
+		<a
+			href="/partners"
+			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-primary)] xs:px-5"
+		>
+			<Users class="text-[var(--pico-primary)]" />
+			<span class="hidden px-2 xs:inline">Partners</span>
+		</a>
+		<a
+			href="/matches"
+			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-error)] xs:px-5"
+		>
+			<IconBrandTinder class="text-[var(--pico-error)]" />
+			<span class="px-2">Matches</span>
+		</a>
+		<a
+			href="/settings"
+			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-accent3)] xs:px-5"
+		>
+			<Settings class="text-[var(--pico-accent3)]" />
+			<span class="hidden px-2 xs:inline">Settings</span>
+		</a>
+	</div>
+
+	<article class="flex w-full flex-col gap-4 p-6 sm:px-8">
+		<p class="flex items-center gap-3 pt-1 text-lg font-bold">
+			<Heart class="text-[var(--pico-error)]" />Previous Swipes
+		</p>
+		<div class="flex flex-wrap items-center gap-x-4">
+			{#if errorMessage}
+				<p class="py-5 text-[var(--pico-muted-color)]">Oops! Fetching swipes failed... Sorry 👀</p>
+			{:else if loadingSwipes}
+				<p class="py-5 text-[var(--pico-muted-color)]">Loading previous swipes...</p>
+			{:else if previousSwipes.length === 0}
+				<p class="py-5 text-[var(--pico-muted-color)]">No previous swipes found.</p>
+			{:else}
 				{#each previousSwipes as swipe}
 					<button
-						class="block border-0 py-1
+						class="inline border-0 py-1
 							{swipe.liked ? 'text-[var(--pico-ok)]' : 'line-through decoration-2 opacity-50'}
-							hover:text-[var(--pico-accent2)]
-							hover:underline
-							hover:opacity-100"
+							hover:text-[var(--pico-accent2)] hover:underline hover:decoration-auto hover:opacity-100"
 					>
 						{swipe.name}
 					</button>
 				{/each}
-			</ul>
-			<a href="/swipes" class="text-[var(--pico-accent2)] hover:underline">
-				<span class="text-sm">... see more</span>
-			</a>
-		</div>
-		<div class="flex flex-col gap-4 text-right">
-			<div class="flex flex-col gap-1">
-				<p class="text-lg font-bold">Matches</p>
-				<p class="text-sm text-[var(--pico-muted-color)]">(names you both liked)</p>
-			</div>
-			<ul class="flex flex-col text-right">
-				{#each matches as match}
-					<li class="list-none font-medium text-[var(--pico-ok)]">{match.name}</li>
-				{/each}
-			</ul>
+				<a href="/swipes" class="py-1 text-[var(--pico-accent2)] hover:underline">... see more</a>
+			{/if}
 		</div>
 	</article>
 </div>

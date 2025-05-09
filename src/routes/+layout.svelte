@@ -18,6 +18,7 @@
 
 	let { children } = $props();
 	let theme: string;
+	let lang = $state('en');
 
 	if (browser) {
 		theme =
@@ -57,7 +58,7 @@
 </svelte:head>
 
 <div class="wrapper relative flex flex-col">
-	<main class="container flex max-w-3xl flex-grow flex-col pb-14 2xs:pb-16">
+	<main class="container mb-2 flex max-w-3xl flex-grow flex-col pb-14 2xs:pb-16">
 		<nav class="mx-2 py-4">
 			<ul>
 				<li class="px-0">
@@ -113,14 +114,21 @@
 	</main>
 
 	<footer class="absolute bottom-0 h-16 w-full">
-		<div class="m-auto flex max-w-3xl justify-between px-2 pt-6 text-sm">
-			<p class="mx-3 text-[var(--pico-muted-color)]">
-				Built by <Link href="{githubLink}/{githubUser}" className="secondary">{githubUser}</Link>
-			</p>
-			<p class="mx-3 hidden text-[var(--pico-muted-color)] 2xs:inline-block">
-				Powered by <Link href="https://svelte.dev" className="secondary">Svelte</Link>
-				& <Link href="https://supabase.com" className="secondary">Supabase</Link>
-			</p>
+		<div class="m-auto flex max-w-3xl items-center justify-between px-2 pt-4 text-sm">
+			<div class="mx-2 flex items-baseline gap-1.5">
+				<span class="text-xs uppercase text-[var(--pico-primary)]">Built by</span>
+				<Link href="{githubLink}/{githubUser}" className="secondary underline-offset-4">
+					{githubUser}
+				</Link>
+			</div>
+			<div class="mx-2 flex items-baseline gap-2">
+				<span class="hidden text-xs uppercase text-[var(--pico-primary)] 2xs:inline">Language:</span
+				>
+				<select class="card lang-select py-1 pl-3 pr-8" bind:value={lang}>
+					<option value="en">English</option>
+					<option value="es">Español</option>
+				</select>
+			</div>
 		</div>
 	</footer>
 </div>
@@ -130,10 +138,9 @@
 		min-height: 100vh;
 		min-height: 100dvh;
 	}
-	.as-link {
-		margin: calc(var(--pico-nav-link-spacing-vertical) * -1)
-			calc(var(--pico-nav-link-spacing-horizontal) * -1);
-		padding: var(--pico-nav-link-spacing-vertical) var(--pico-nav-link-spacing-horizontal);
-		border: 0;
+	.lang-select {
+		padding-right: 2rem;
+		padding-left: 0.75rem;
+		padding-block: 0.1rem;
 	}
 </style>

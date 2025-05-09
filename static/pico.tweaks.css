@@ -75,6 +75,7 @@ article,
     --pico-ok: #008563;
     --pico-ok-bg: #008563;
     --pico-accent2: #c89c0c;
+    --pico-accent3: #00a6f4;
     --pico-error: #c72240;
     --pico-error-bg: #c72240;
     --pico-error-hover: #e2004b;
@@ -93,6 +94,7 @@ article,
         --pico-ok: #00c482;
         --pico-ok-bg: #22926d5b;
         --pico-accent2: #e2b930;
+        --pico-accent3: #00a6f4;
         --pico-error: #f40957;
         --pico-error-bg: #e2004bc0;
         --pico-error-hover: #e2004b;
@@ -111,6 +113,7 @@ article,
     --pico-ok: #00c482;
     --pico-ok-bg: #22926d5b;
     --pico-accent2: #e2b930;
+    --pico-accent3: #00a6f4;
     --pico-error: #f40957;
     --pico-error-bg: #e2004bc0;
     --pico-error-hover: #e2004b;
