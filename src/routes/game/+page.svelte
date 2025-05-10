@@ -5,48 +5,45 @@
 	import { IconBrandTinder } from '@tabler/icons-svelte';
 	import { store } from '$lib/store.svelte';
 
-	let previousSwipes = $state<{ name: string; liked: boolean }[]>([]);
+	let previousSwipes = $state<{ id: string; name: string; liked: boolean }[]>([]);
 	let previousSwipesError = $state('');
 	let loadingSwipes = $state(true);
-	let babyName = $state<{ id: string; name: string } | null>(null);
+	let randomNames = $state<{ id: string; name: string }[]>([]);
 
 	async function getPreviousSwipes() {
 		previousSwipesError = '';
-		const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(16);
+		const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(100);
 		if (error) previousSwipesError = error?.message;
-		else previousSwipes = data;
+		else previousSwipes = data.toReversed();
 		loadingSwipes = false;
 	}
 
-	async function getRandomName() {
-		babyName = (await supabase.from('v_random_name').select('id,name').single()).data;
+	async function getRandomNames() {
+		if (randomNames.length === 0) {
+			randomNames = (await supabase.from('v_random_names').select('id,name')).data || [];
+		}
 	}
 
 	async function handleSwipe(liked: boolean) {
-		const babyNameId = babyName?.id;
-		getRandomName();
-		await supabase.from('swipes').insert({ babyname_id: babyNameId, liked });
-		getPreviousSwipes();
+		const currentName = randomNames.pop();
+		if (!currentName) return;
+		await supabase.from('swipes').insert({ babyname_id: currentName.id, liked });
+		previousSwipes.push({ id: currentName.id, name: currentName.name, liked });
 	}
 
 	async function handleUndo() {
-		const lastSwipe = (
-			await supabase.from('v_last_swipe').select('user_id,babyname_id,name').single()
-		)?.data;
+		const lastSwipe = previousSwipes.pop();
 		if (!lastSwipe) return;
 		await supabase.from('swipes').delete().match({
-			user_id: lastSwipe.user_id,
-			babyname_id: lastSwipe.babyname_id
+			user_id: store.user?.id,
+			babyname_id: lastSwipe.id
 		});
-		babyName = {
-			id: lastSwipe.babyname_id,
-			name: lastSwipe.name
-		};
+		randomNames.push({ id: lastSwipe.id, name: lastSwipe.name });
 	}
 
 	$effect(() => {
 		store.user;
-		if (!babyName) getRandomName();
+		getRandomNames();
 	});
 
 	$effect(() => {
@@ -59,7 +56,7 @@
 	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
 		<p class="flex h-20 items-center text-3xl font-bold">
-			{babyName?.name || '...'}
+			{randomNames[randomNames.length - 1]?.name || '...'}
 		</p>
 		<div class="flex w-full justify-center gap-4">
 			<button type="button" class="py-1 text-[var(--pico-accent2)] outline" onclick={handleUndo}>
@@ -117,7 +114,7 @@
 			{:else if previousSwipes.length === 0}
 				<p class="py-5 text-[var(--pico-muted-color)]">No previous swipes found.</p>
 			{:else}
-				{#each previousSwipes as swipe}
+				{#each previousSwipes.toReversed().slice(0, 16) as swipe}
 					<button
 						class="inline border-0 py-1
 							{swipe.liked ? 'text-[var(--pico-ok)]' : 'line-through decoration-2 opacity-50'}
