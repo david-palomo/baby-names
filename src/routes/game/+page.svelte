@@ -5,36 +5,79 @@
 	import { IconBrandTinder } from '@tabler/icons-svelte';
 	import { store } from '$lib/store.svelte';
 
-	let previousSwipes: { name: string; liked: boolean }[] = $state([]);
-	let errorMessage = $state('');
+	let previousSwipes = $state<{ name: string; liked: boolean }[]>([]);
+	let previousSwipesError = $state('');
 	let loadingSwipes = $state(true);
+	let babyName = $state<{ id: string; name: string } | null>(null);
 
-	async function fetchData() {
-		errorMessage = '';
-		const { data, error } = await supabase.from('v_swipes').select('name, liked').limit(16);
-		if (error) errorMessage = error?.message;
+	async function getPreviousSwipes() {
+		previousSwipesError = '';
+		const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(16);
+		if (error) previousSwipesError = error?.message;
 		else previousSwipes = data;
 		loadingSwipes = false;
 	}
+
+	async function getRandomName() {
+		babyName = (await supabase.from('v_random_name').select('id,name').single()).data;
+	}
+
+	async function handleSwipe(liked: boolean) {
+		const babyNameId = babyName?.id;
+		getRandomName();
+		await supabase.from('swipes').insert({ babyname_id: babyNameId, liked });
+		getPreviousSwipes();
+	}
+
+	async function handleUndo() {
+		const lastSwipe = (
+			await supabase.from('v_last_swipe').select('user_id,babyname_id,name').single()
+		)?.data;
+		if (!lastSwipe) return;
+		await supabase.from('swipes').delete().match({
+			user_id: lastSwipe.user_id,
+			babyname_id: lastSwipe.babyname_id
+		});
+		babyName = {
+			id: lastSwipe.babyname_id,
+			name: lastSwipe.name
+		};
+	}
+
 	$effect(() => {
 		store.user;
-		fetchData();
+		if (!babyName) getRandomName();
+	});
+
+	$effect(() => {
+		store.user;
+		getPreviousSwipes();
 	});
 </script>
 
 <div in:fly>
 	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
-		<p class="flex h-20 items-center text-3xl font-bold">John</p>
+		<p class="flex h-20 items-center text-3xl font-bold">
+			{babyName?.name || '...'}
+		</p>
 		<div class="flex w-full justify-center gap-4">
-			<button type="button" class="py-1 text-[var(--pico-accent2)] outline">
+			<button type="button" class="py-1 text-[var(--pico-accent2)] outline" onclick={handleUndo}>
 				<Undo size={20} />
 			</button>
 			<button type="button" class="py-1 text-xs font-bold outline">+ info</button>
 		</div>
 		<div class="flex space-x-4 pt-6">
-			<button type="button" class="error-btn w-24 px-4 py-2 text-lg font-bold">no</button>
-			<button type="button" class="w-24 px-4 py-2 text-lg font-bold">yes</button>
+			<button
+				onclick={() => handleSwipe(false)}
+				type="button"
+				class="error-btn w-24 px-4 py-2 text-lg font-bold">no</button
+			>
+			<button
+				onclick={() => handleSwipe(true)}
+				type="button"
+				class="w-24 px-4 py-2 text-lg font-bold">yes</button
+			>
 		</div>
 	</article>
 
@@ -67,7 +110,7 @@
 			<Heart class="text-[var(--pico-error)]" />Previous Swipes
 		</p>
 		<div class="flex flex-wrap items-center gap-x-4">
-			{#if errorMessage}
+			{#if previousSwipesError}
 				<p class="py-5 text-[var(--pico-muted-color)]">Oops! Fetching swipes failed... Sorry 👀</p>
 			{:else if loadingSwipes}
 				<p class="py-5 text-[var(--pico-muted-color)]">Loading previous swipes...</p>

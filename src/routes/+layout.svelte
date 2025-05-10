@@ -38,10 +38,8 @@
 		if (!session) {
 			const { data, error } = await supabase.auth.signInAnonymously();
 			if (error) console.error('Error creating anonymous user:', error);
-			console.log('Anonymous user:', data.user?.id, 'with email: ', data.user?.email);
 			store.user = data.user;
 		} else {
-			console.log('Logged user:', session.user.id, 'with email: ', session.user.email);
 			store.user = session.user;
 		}
 	});
