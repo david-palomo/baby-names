@@ -4,17 +4,12 @@
 	import { browser } from '$app/environment';
 	import Marquee from '$lib/components/Marquee.svelte';
 	import { names as items } from '$lib/data';
-	import { supabase } from '$lib/supabase';
+	import { getUser, supabase } from '$lib/supabase';
 	import { store } from '$lib/store.svelte';
-	import { onMount } from 'svelte';
-	import {
-		githubLink,
-		githubUser,
-		projectTitleAbove,
-		projectTitle,
-		projectTitleBelow
-	} from '$lib/config';
+	import { githubLink, githubUser, projectTitleAbove, projectTitle } from '$lib/config';
 	import Link from '$lib/components/Link.svelte';
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 	let theme: string;
@@ -31,24 +26,15 @@
 		document.documentElement.dataset.theme = theme;
 		document.cookie = `preferredColorScheme=${theme};path=/;max-age=31536000`;
 	}
-	onMount(async () => {
-		const {
-			data: { session }
-		} = await supabase.auth.getSession();
-		if (!session) {
-			const { data, error } = await supabase.auth.signInAnonymously();
-			if (error) console.error('Error creating anonymous user:', error);
-			store.user = data.user;
-		} else {
-			store.user = session.user;
-		}
-	});
 
 	async function signOut() {
-		const { error } = await supabase.auth.signOut();
-		if (error) console.error('Error signing out:', error);
-		store.user = null;
+		await supabase.auth.signOut();
+		store.user = await getUser();
 	}
+
+	onMount(async () => {
+		store.user = await getUser();
+	});
 </script>
 
 <svelte:head>
@@ -78,7 +64,6 @@
 						<span class="flex items-center space-x-2 text-xl lowercase 2xs:text-2xl"
 							>{projectTitle}</span
 						>
-						<span class="text-xs uppercase text-[var(--pico-primary)]">{projectTitleBelow}</span>
 					</a>
 				</li>
 			</ul>
@@ -95,7 +80,7 @@
 					<a
 						class="card flex items-center gap-2 px-2 py-1 hover:border-[var(--pico-primary-border)] xs:px-1 xs:pl-3"
 						title="Log in"
-						href="/auth/login"
+						href="/auth/login?next={page.url.pathname}"
 					>
 						<span class="hidden xs:inline">Log in</span>
 						<span class="text-xl xs:text-lg">🔒</span>

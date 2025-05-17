@@ -1,20 +1,37 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { supabase } from '$lib/supabase';
+	import { getUser, supabase } from '$lib/supabase';
+	import { store } from '$lib/store.svelte';
+
+	let errorDescription: string | null = null;
 
 	onMount(async () => {
-		const { data, error } = await supabase.auth.getSession();
+		const urlParams = new URLSearchParams(window.location.search);
+		const anonUserId = urlParams.get('anon_user_id');
+		const nextUrl = urlParams.get('next') || '/';
+		errorDescription = urlParams.get('error_description');
 
-		if (error) console.error('Error getting session:', error);
-		else if (data.session) {
-			goto('/game');
-		} else {
-			goto('/auth/login');
+		store.user = await getUser();
+
+		if (!errorDescription) {
+			if (anonUserId) {
+				console.log('anonUserId:', anonUserId);
+				console.log('target_user_id:', store.user?.id);
+				await supabase.rpc('copy_swipes', {
+					source_user_id: anonUserId,
+					target_user_id: store.user?.id
+				});
+			}
+			goto(nextUrl);
 		}
 	});
 </script>
 
-<div class="flex h-96 items-center justify-center">
-	<p>Processing login, please wait...</p>
-</div>
+<p class="text-center">
+	{#if errorDescription}
+		There was an error logging in!<br />({errorDescription} 👀)<br />Please, try again.
+	{:else}
+		Processing login, please wait...
+	{/if}
+</p>

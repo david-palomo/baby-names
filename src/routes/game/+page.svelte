@@ -8,6 +8,7 @@
 	let previousSwipes = $state<{ id: string; name: string; liked: boolean }[]>([]);
 	let previousSwipesError = $state('');
 	let loadingSwipes = $state(true);
+	let loadingNames = $state(false);
 	let randomNames = $state<{ id: string; name: string }[]>([]);
 
 	async function getPreviousSwipes() {
@@ -19,8 +20,10 @@
 	}
 
 	async function getRandomNames() {
-		if (randomNames.length === 0) {
+		if (randomNames.length === 0 && !loadingNames) {
+			loadingNames = true;
 			randomNames = (await supabase.from('v_random_names').select('id,name')).data || [];
+			loadingNames = false;
 		}
 	}
 
@@ -44,10 +47,6 @@
 	$effect(() => {
 		store.user;
 		getRandomNames();
-	});
-
-	$effect(() => {
-		store.user;
 		getPreviousSwipes();
 	});
 </script>
@@ -108,11 +107,11 @@
 		</p>
 		<div class="flex flex-wrap items-center gap-x-4">
 			{#if previousSwipesError}
-				<p class="py-5 text-[var(--pico-muted-color)]">Oops! Fetching swipes failed... Sorry 👀</p>
+				<p class="py-1 text-[var(--pico-muted-color)]">Oops! Fetching swipes failed... Sorry 👀</p>
 			{:else if loadingSwipes}
-				<p class="py-5 text-[var(--pico-muted-color)]">Loading previous swipes...</p>
+				<p class="py-1 text-[var(--pico-muted-color)]">Loading previous swipes...</p>
 			{:else if previousSwipes.length === 0}
-				<p class="py-5 text-[var(--pico-muted-color)]">No previous swipes found.</p>
+				<p class="py-1 text-[var(--pico-muted-color)]">No previous swipes found.</p>
 			{:else}
 				{#each previousSwipes.toReversed().slice(0, 16) as swipe}
 					<button

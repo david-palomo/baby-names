@@ -3,3 +3,8 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 
 export const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 export type { User } from '@supabase/supabase-js';
+
+export async function getUser() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session ? session.user : (await supabase.auth.signInAnonymously()).data.user;
+}

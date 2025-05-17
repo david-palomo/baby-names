@@ -4,29 +4,20 @@
 	import Github from '$lib/icons/Github.svelte';
 	import { SendHorizontal } from 'lucide-svelte';
 	import { supabase } from '$lib/supabase';
-	import { goto } from '$app/navigation';
 	import { store } from '$lib/store.svelte';
 
 	let email = '';
-	let otp = '';
+	let token = '';
 	let loading = false;
 	let errorMessage = '';
 	let otpMessage = '';
-	let showOtpField = false;
 
 	async function sendOtp() {
 		loading = true;
 		errorMessage = '';
 		otpMessage = '';
-
 		const { error } = await supabase.auth.signInWithOtp({ email });
-		if (error) {
-			errorMessage = error.message;
-		} else {
-			otpMessage = 'Check your email for the OTP code!';
-			showOtpField = true;
-		}
-
+		error ? (errorMessage = error.message) : (otpMessage = 'Check your email for the OTP code!');
 		loading = false;
 	}
 
@@ -34,43 +25,18 @@
 		loading = true;
 		errorMessage = '';
 		otpMessage = '';
-
-		const { data, error } = await supabase.auth.verifyOtp({
-			email,
-			token: otp,
-			type: 'email'
-		});
-
-		if (error) {
-			errorMessage = error.message;
-		} else {
-			store.user = data.user;
-			goto('/game');
-		}
-
+		const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+		error ? (errorMessage = error.message) : (store.user = data.user);
 		loading = false;
 	}
 
-	async function signInWithGoogle() {
-		const { error } = await supabase.auth.signInWithOAuth({
-			provider: 'google',
-			options: {
-				redirectTo: `${window.location.origin}/auth/callback`
-			}
+	async function signInWithOauth(provider: 'github' | 'google') {
+		const urlParams = new URLSearchParams(window.location.search);
+		if (store.user?.is_anonymous) urlParams.set('anon_user_id', store.user.id);
+		await supabase.auth.signInWithOAuth({
+			provider,
+			options: { redirectTo: `${window.location.origin}/auth/callback?${urlParams.toString()}` }
 		});
-
-		if (error) errorMessage = error.message;
-	}
-
-	async function signInWithGithub() {
-		const { error } = await supabase.auth.signInWithOAuth({
-			provider: 'github',
-			options: {
-				redirectTo: `${window.location.origin}/auth/callback`
-			}
-		});
-
-		if (error) errorMessage = error.message;
 	}
 </script>
 
@@ -80,9 +46,9 @@
 	<div class="flex flex-col-reverse items-start justify-center gap-6 sm:flex-row md:gap-10">
 		<form
 			class="w-full text-center sm:w-1/2"
-			on:submit|preventDefault={showOtpField ? verifyOtp : sendOtp}
+			on:submit|preventDefault={otpMessage ? verifyOtp : sendOtp}
 		>
-			{#if !showOtpField}
+			{#if !otpMessage}
 				<div class="hidden sm:block">
 					<input type="email" placeholder="Email" bind:value={email} required />
 					<button type="submit" class="w-full" disabled={loading}>
@@ -108,18 +74,14 @@
 					</button>
 				</fieldset>
 			{:else}
-				{#if otpMessage}
-					<p class="success mb-4 mt-2 p-2 text-center">{otpMessage}</p>
-				{:else if errorMessage}
-					<p class="error mb-4 mt-2 p-2 text-center">{errorMessage}</p>
-				{:else}
-					<p class="mb-4 mt-2 p-2 text-center">...</p>
-				{/if}
+				<p class="{errorMessage ? 'error' : 'success'} mb-4 mt-2 p-2 text-center">
+					{errorMessage || otpMessage}
+				</p>
 				<div>
 					<input
 						type="text"
 						placeholder="••••••"
-						bind:value={otp}
+						bind:value={token}
 						required
 						inputmode="numeric"
 						pattern="[0-9]*"
@@ -135,7 +97,7 @@
 			{/if}
 		</form>
 
-		{#if !showOtpField}
+		{#if !otpMessage}
 			<div class="hidden sm:block">
 				<p class="pt-10 text-center text-[var(--pico-muted-color)]">OR</p>
 			</div>
@@ -143,7 +105,7 @@
 				<button
 					type="button"
 					class="flex w-full justify-center gap-1 border-2 font-medium text-current outline"
-					on:click={signInWithGoogle}
+					on:click={() => signInWithOauth('google')}
 					disabled={loading}
 				>
 					<Google />
@@ -152,7 +114,7 @@
 				<button
 					type="button"
 					class="mb-0 flex w-full justify-center gap-1 border-2 font-medium text-current outline"
-					on:click={signInWithGithub}
+					on:click={() => signInWithOauth('github')}
 					disabled={loading}
 				>
 					<Github />
@@ -161,16 +123,16 @@
 			</div>
 		{/if}
 	</div>
-	{#if !showOtpField && !errorMessage && !otpMessage}
-		<div class="hidden text-center text-sm text-[var(--pico-muted-color)] sm:block">
-			Logging in will allow you to save your swipes and connect with a partner.
-			<br />We will never share your email with anyone.
-			<br />We will never send you spam.
-		</div>
-	{/if}
-
-	{#if !showOtpField && errorMessage}
-		<div class="error p-2 text-center">{errorMessage}</div>
+	{#if !otpMessage}
+		{#if errorMessage}
+			<div class="error p-2 text-center">{errorMessage}</div>
+		{:else}
+			<div class="hidden text-center text-sm text-[var(--pico-muted-color)] sm:block">
+				Logging in will allow you to save your swipes and connect with a partner.
+				<br />We will never share your email with anyone.
+				<br />We will never send you spam.
+			</div>
+		{/if}
 	{/if}
 </article>
 
