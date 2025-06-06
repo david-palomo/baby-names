@@ -7,6 +7,7 @@
 	let errorDescription: string | null = null;
 
 	onMount(async () => {
+		console.log('Hit callback');
 		const urlParams = new URLSearchParams(window.location.search);
 		const anonUserId = urlParams.get('anon_user_id');
 		const nextUrl = urlParams.get('next') || '/';
