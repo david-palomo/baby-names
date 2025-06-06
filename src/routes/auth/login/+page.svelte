@@ -33,10 +33,9 @@
 	async function signInWithOauth(provider: 'github' | 'google') {
 		const urlParams = new URLSearchParams(window.location.search);
 		if (store.user?.is_anonymous) urlParams.set('anon_user_id', store.user.id);
-		await supabase.auth.signInWithOAuth({
-			provider,
-			options: { redirectTo: `${window.location.origin}/auth/callback?${urlParams.toString()}` }
-		});
+		const redirectTo = `${window.location.origin}/auth/callback?${urlParams.toString()}`;
+		console.log('Redirecting to:', redirectTo);
+		await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
 	}
 </script>
 
