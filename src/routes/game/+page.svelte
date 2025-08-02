@@ -1,56 +1,85 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { supabase } from '$lib/supabase';
+	import { getUser, supabase } from '$lib/supabase';
 	import { Users, Undo, Heart, Settings } from 'lucide-svelte';
 	import { IconBrandTinder } from '@tabler/icons-svelte';
 	import { store } from '$lib/store.svelte';
+	import { fetchState } from '$lib/fetchState.svelte';
+	import type { BabyName, Swipe, SwipedName } from '$lib/types';
 
-	let previousSwipes = $state<{ id: string; name: string; liked: boolean }[]>([]);
-	let previousSwipesError = $state('');
-	let loadedSwipes = $state(false);
-	let loadingNames = $state(false);
-	let randomNames = $state<{ id: string; name: string }[]>([]);
+	let swipes = $state<SwipedName[]>([]);
+	let names = $state<BabyName[]>([]);
+	const swipesState = fetchState();
+	const namesState = fetchState();
 
-	async function getPreviousSwipes() {
-		previousSwipesError = '';
-		if (!loadedSwipes) {
-			loadedSwipes = true;
-			const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(100);
-			if (error) previousSwipesError = error?.message;
-			else previousSwipes = data.toReversed();
+	async function getSwipes() {
+		if (swipesState.status === 'loading' || swipesState.status === 'success') return;
+		swipesState.setLoading();
+
+		const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(100);
+
+		if (error) {
+			swipesState.setError(error.message);
+		} else {
+			swipes = data.toReversed();
+			swipesState.setSuccess();
 		}
 	}
 
-	async function getRandomNames() {
-		if (randomNames.length === 0 && !loadingNames) {
-			loadingNames = true;
-			randomNames = (await supabase.from('v_random_names').select('id,name')).data || [];
-			loadingNames = false;
+	async function getNames() {
+		if (namesState.status === 'loading' || namesState.status === 'success') return;
+		namesState.setLoading();
+
+		const { data, error } = await supabase.from('v_random_names').select('id,name');
+
+		if (error) {
+			namesState.setError(error.message);
+		} else {
+			names = data || [];
+			namesState.setSuccess();
 		}
 	}
 
 	async function handleSwipe(liked: boolean) {
-		const currentName = randomNames.pop();
+		const currentName = names.pop();
 		if (!currentName) return;
-		await supabase.from('swipes').insert({ babyname_id: currentName.id, liked });
-		previousSwipes.push({ id: currentName.id, name: currentName.name, liked });
+
+		const swipe: Swipe = { babyname_id: currentName.id, liked };
+		const { error } = await supabase.from('swipes').upsert(swipe);
+
+		if (error?.code === '23503' && error.message.includes('swipes_user_id_fkey')) {
+			store.user = await getUser();
+			const retryData = swipes.map((s) => ({ babyname_id: s.id, liked: s.liked })).concat(swipe);
+			await supabase.from('swipes').upsert(retryData);
+		}
+
+		const existingIndex = swipes.findIndex((s) => s.id === currentName.id);
+		if (existingIndex > -1) {
+			swipes.splice(existingIndex, 1);
+		}
+		swipes.push({ ...currentName, liked });
+		if (swipes.length > 100) {
+			swipes.shift();
+		}
 	}
 
 	async function handleUndo() {
-		const lastSwipe = previousSwipes.pop();
+		const lastSwipe = swipes.pop();
 		if (!lastSwipe) return;
+
 		await supabase.from('swipes').delete().match({
 			user_id: store.user?.id,
 			babyname_id: lastSwipe.id
 		});
-		randomNames.push({ id: lastSwipe.id, name: lastSwipe.name });
+
+		names.push({ id: lastSwipe.id, name: lastSwipe.name });
 	}
 
 	$effect(() => {
-		console.log('Effecting');
-		store.user;
-		getRandomNames();
-		getPreviousSwipes();
+		if (store.user) {
+			getNames();
+			getSwipes();
+		}
 	});
 </script>
 
@@ -58,7 +87,15 @@
 	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
 		<p class="flex h-20 items-center text-3xl font-bold">
-			{randomNames[randomNames.length - 1]?.name || '...'}
+			{#if namesState.status === 'idle' || namesState.status === 'loading'}
+				...
+			{:else if namesState.status === 'error'}
+				<span class="text-base text-[var(--pico-error)]">Error loading names!</span>
+			{:else if names.length > 0}
+				{names[names.length - 1].name}
+			{:else}
+				No names left!
+			{/if}
 		</p>
 		<div class="flex w-full justify-center gap-4">
 			<button type="button" class="py-1 text-[var(--pico-accent2)] outline" onclick={handleUndo}>
@@ -109,18 +146,19 @@
 			<Heart class="text-[var(--pico-error)]" />Previous Swipes
 		</p>
 		<div class="flex flex-wrap items-center gap-x-4">
-			{#if previousSwipesError}
-				<p class="py-1 text-[var(--pico-muted-color)]">Oops! Fetching swipes failed... Sorry 👀</p>
-			{:else if !loadedSwipes}
+			{#if swipesState.status === 'idle' || swipesState.status === 'loading'}
 				<p class="py-1 text-[var(--pico-muted-color)]">Loading previous swipes...</p>
-			{:else if previousSwipes.length === 0}
+			{:else if swipesState.status === 'error'}
+				<p class="py-1 text-[var(--pico-muted-color)]">Oops! {swipesState.message} 👀</p>
+			{:else if swipes.length === 0}
 				<p class="py-1 text-[var(--pico-muted-color)]">No previous swipes found.</p>
 			{:else}
-				{#each previousSwipes.toReversed().slice(0, 16) as swipe}
+				{#each swipes.slice(-16).toReversed() as swipe}
 					<button
 						class="inline border-0 py-1
 							{swipe.liked ? 'text-[var(--pico-ok)]' : 'line-through decoration-2 opacity-50'}
 							hover:text-[var(--pico-accent2)] hover:underline hover:decoration-auto hover:opacity-100"
+						onclick={() => names.push({ id: swipe.id, name: swipe.name })}
 					>
 						{swipe.name}
 					</button>
