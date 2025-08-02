@@ -4,14 +4,14 @@
 	import { browser } from '$app/environment';
 	import Marquee from '$lib/components/Marquee.svelte';
 	import { names as items } from '$lib/data';
-	import { getUser, supabase } from '$lib/supabase';
+	import { supabase } from '$lib/supabase';
 	import { store } from '$lib/store.svelte';
 	import { githubLink, githubUser, projectTitleAbove, projectTitle } from '$lib/config';
 	import Link from '$lib/components/Link.svelte';
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 
-	let { children } = $props();
+	let { data, children } = $props();
 	let theme: string;
 	let lang = $state('en');
 
@@ -29,11 +29,11 @@
 
 	async function signOut() {
 		await supabase.auth.signOut();
-		store.user = await getUser();
+		invalidateAll();
 	}
 
-	onMount(async () => {
-		store.user = await getUser();
+	$effect(() => {
+		store.user = data.user;
 	});
 </script>
 

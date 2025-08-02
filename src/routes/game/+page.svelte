@@ -6,6 +6,7 @@
 	import { store } from '$lib/store.svelte';
 	import { fetchState } from '$lib/fetchState.svelte';
 	import type { BabyName, Swipe, SwipedName } from '$lib/types';
+	import { untrack } from 'svelte';
 
 	let swipes = $state<SwipedName[]>([]);
 	let names = $state<BabyName[]>([]);
@@ -13,7 +14,7 @@
 	const namesState = fetchState();
 
 	async function getSwipes() {
-		if (swipesState.status === 'loading' || swipesState.status === 'success') return;
+		if (store.user && ['loading', 'success'].includes(swipesState.status)) return;
 		swipesState.setLoading();
 
 		const { data, error } = await supabase.from('v_swipes').select('id,name,liked').limit(100);
@@ -27,7 +28,7 @@
 	}
 
 	async function getNames() {
-		if (namesState.status === 'loading' || namesState.status === 'success') return;
+		if (store.user && ['loading', 'success'].includes(namesState.status)) return;
 		namesState.setLoading();
 
 		const { data, error } = await supabase.from('v_random_names').select('id,name');
@@ -77,8 +78,12 @@
 
 	$effect(() => {
 		if (store.user) {
-			getNames();
-			getSwipes();
+			untrack(() => {
+				swipes = [];
+				swipesState.reset();
+				getNames();
+				getSwipes();
+			});
 		}
 	});
 </script>
