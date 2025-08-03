@@ -40,7 +40,7 @@
 </script>
 
 <article in:fly class="mb-6 flex h-96 flex-col justify-start gap-6 px-8 sm:gap-8 md:px-10">
-	<p class="pb-2 pr-4 pt-6 text-center text-2xl font-bold sm:pt-8">🔒 Log in</p>
+	<p class="pb-2 pr-4 pt-6 text-center font-title text-2xl font-bold sm:pt-8">🔒 Log in</p>
 
 	<div class="flex flex-col-reverse items-start justify-center gap-6 sm:flex-row md:gap-10">
 		<form

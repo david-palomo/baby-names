@@ -91,7 +91,7 @@
 <div in:fly>
 	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
-		<p class="flex h-20 items-center text-3xl font-bold">
+		<p class="flex h-20 items-center font-title text-4xl font-bold">
 			{#if namesState.status === 'idle' || namesState.status === 'loading'}
 				...
 			{:else if namesState.status === 'error'}
@@ -117,7 +117,7 @@
 			<button
 				onclick={() => handleSwipe(true)}
 				type="button"
-				class="w-24 px-4 py-2 text-lg font-bold">yes</button
+				class="ok-btn w-24 px-4 py-2 text-lg font-bold">yes</button
 			>
 		</div>
 	</article>
@@ -182,5 +182,14 @@
 	.error-btn:hover {
 		background-color: var(--pico-error-hover);
 		border-color: var(--pico-error-hover);
+	}
+	.ok-btn {
+		background-color: var(--pico-ok-bg);
+		border-color: var(--pico-ok-bg);
+		outline-color: var(--pico-ok-bg);
+	}
+	.ok-btn:hover {
+		background-color: var(--pico-ok-hover);
+		border-color: var(--pico-ok-hover);
 	}
 </style>
