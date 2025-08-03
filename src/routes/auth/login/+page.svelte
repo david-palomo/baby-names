@@ -3,8 +3,9 @@
 	import Google from '$lib/icons/Google.svelte';
 	import Github from '$lib/icons/Github.svelte';
 	import { SendHorizontal } from 'lucide-svelte';
-	import { supabase } from '$lib/supabase';
+	import { getUser, supabase } from '$lib/supabase';
 	import { store } from '$lib/store.svelte';
+	import { goto } from '$app/navigation';
 
 	let email = '';
 	let token = '';
@@ -25,8 +26,22 @@
 		loading = true;
 		errorMessage = '';
 		otpMessage = '';
-		const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-		error ? (errorMessage = error.message) : (store.user = data.user);
+		const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+		if (error) {
+			errorMessage = error.message;
+		} else {
+			const urlParams = new URLSearchParams(window.location.search);
+			const anonUserId = store.user?.is_anonymous ? store.user.id : null;
+			const nextUrl = urlParams.get('next') || '/';
+			store.user = await getUser();
+			if (anonUserId && store.user?.id) {
+				await supabase.rpc('copy_swipes', {
+					source_user_id: anonUserId,
+					target_user_id: store.user.id
+				});
+			}
+			goto(nextUrl);
+		}
 		loading = false;
 	}
 

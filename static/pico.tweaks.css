@@ -93,7 +93,8 @@ article,
 @media only screen and (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
         --pico-ok: #00c482;
-        --pico-ok-bg: #22926d5b;
+        --pico-ok-bg: #00724a;
+        --pico-ok-hover: #008e5c;
         --pico-accent2: #e2b930;
         --pico-accent3: #00a6f4;
         --pico-error: #f40957;
