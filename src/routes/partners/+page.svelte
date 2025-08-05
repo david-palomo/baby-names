@@ -3,6 +3,8 @@
 	import { store } from '$lib/store.svelte';
 	import type { Partner } from '$lib/types';
 	import { fly } from 'svelte/transition';
+	import { ArrowLeft, CircleUserRound } from 'lucide-svelte';
+	import { IconBrandTinder } from '@tabler/icons-svelte';
 
 	let partners = $state<Partner[]>([]);
 	let isLoading = $state(true);
@@ -51,15 +53,22 @@
 	}
 </script>
 
+<a
+	href="/game"
+	class="flex items-center gap-2 pb-5 text-[var(--pico-primary)] underline-offset-8 hover:underline"
+	aria-label="Back to swiping"
+>
+	<ArrowLeft />
+	<span>Back to swiping</span>
+</a>
+
 <div in:fly={{ y: 20, duration: 300 }}>
 	<!-- Section to share connection link -->
-	<article class="mb-6 p-8 sm:px-12 sm:py-10">
-		<h2 class="py-1 font-title text-2xl font-bold tracking-wide opacity-90">
-			Send this link to your partner!
-		</h2>
+	<article class="mb-6 p-8 text-center">
+		<h2 class="font-title text-2xl font-bold tracking-wide">Send this link to your partner!</h2>
 		<fieldset role="group" class="my-6">
 			<input type="text" id="connect-link" name="connect-link" value={connectUrl} readonly />
-			<button onclick={copyConnectLink} role="button" data-tooltip="Copy link">
+			<button onclick={copyConnectLink} role="button" data-tooltip="Copy link" class="flex-0 px-6">
 				{#if connectLinkCopied}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -92,25 +101,24 @@
 		</fieldset>
 		<div>
 			{#if connectLinkCopied}
-				<p class="copied-indicator text-xl/6">Copied!</p>
+				<p class="copied-indicator text-xl/6 font-medium text-[var(--pico-primary)]">Copied!</p>
 			{:else}
-				<p class="pr-16 text-[var(--pico-muted-color)]">Connect to see names you both like.</p>
+				<p class="text-[var(--pico-muted-color)]">Connect to see names you both like.</p>
 			{/if}
 		</div>
 	</article>
 
 	<!-- Section for existing partners -->
-	<h2 class="pb-6 pt-2 font-title text-2xl font-bold opacity-90">Partners</h2>
+	<h2 class="pb-6 font-title text-2xl font-bold opacity-90">Partners</h2>
 
 	{#if isLoading}
 		<p aria-busy="true" class="mt-4">Loading partners...</p>
 	{:else if partners.length > 0}
-		<!-- A responsive grid for the partner cards, max 2 per row on medium screens -->
 		<div class="grid">
 			{#each partners as partner (partner.id)}
-				<article class="mb-4">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center space-x-4">
+				<article>
+					<div class="flex items-center justify-between gap-x-4">
+						<div class="flex items-center gap-x-4">
 							{#if partner.avatar_url}
 								<img
 									src={partner.avatar_url}
@@ -119,40 +127,24 @@
 								/>
 							{:else}
 								<!-- Placeholder SVG for when there is no avatar -->
-								<div
-									class="flex h-12 w-12 items-center justify-center rounded-full"
-									style="background-color: var(--card-background-color);"
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle
-											cx="12"
-											cy="7"
-											r="4"
-										/></svg
-									>
+								<div class="flex h-12 w-10 items-center justify-center">
+									<CircleUserRound size={44} strokeWidth={1.5} />
 								</div>
 							{/if}
-							<p class="font-medium">{partner.name || 'Unnamed Partner'}</p>
+							<p class="max-w-[16ch] overflow-hidden overflow-ellipsis whitespace-nowrap">
+								{partner.name}
+							</p>
 						</div>
 
-						<div class="flex items-center space-x-2">
+						<div class="flex items-center space-x-4">
 							<!-- Matches -->
 							<a
 								href={`/matches?partner_id=${partner.id}`}
-								class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
+								class="flex items-center justify-center gap-1 text-sm font-bold"
 								data-tooltip="{0} matches"
 							>
-								( 0 )
 								<!-- TODO: Add real count -->
+								<IconBrandTinder />{0}
 							</a>
 							<!-- Remove Connection -->
 							<button
@@ -180,7 +172,7 @@
 			{/each}
 		</div>
 	{:else}
-		<article class="mt-4 text-center">
+		<article class="text-center">
 			<p>You have no partners yet.</p>
 			<p class="text-sm" style="color: var(--pico-muted-color);">
 				Share your connect link to get started.
@@ -188,16 +180,3 @@
 		</article>
 	{/if}
 </div>
-
-<style>
-	.copied-indicator {
-		text-align: end;
-		font-weight: 500;
-		color: var(--pico-primary);
-	}
-	/* Ensure the copy button in the group isn't too wide */
-	fieldset[role='group'] button {
-		flex-grow: 0;
-		padding-inline: 1.25rem;
-	}
-</style>

@@ -89,7 +89,9 @@
 </script>
 
 <div in:fly>
-	<article class="mb-6 flex h-96 flex-col items-center justify-center text-center">
+	<article
+		class="mb-6 flex h-80 max-h-[55vh] min-h-72 flex-col items-center justify-center text-center 2xs:h-96"
+	>
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
 		<p class="flex h-20 items-center font-title text-4xl font-bold">
 			{#if namesState.status === 'idle' || namesState.status === 'loading'}
@@ -108,16 +110,16 @@
 			</button>
 			<button type="button" class="py-1 text-xs font-bold outline">+ info</button>
 		</div>
-		<div class="flex space-x-4 pt-6">
+		<div class="flex space-x-4 pt-4">
 			<button
 				onclick={() => handleSwipe(false)}
 				type="button"
-				class="error-btn w-24 px-4 py-2 text-lg font-bold">no</button
+				class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">no</button
 			>
 			<button
 				onclick={() => handleSwipe(true)}
 				type="button"
-				class="ok-btn w-24 px-4 py-2 text-lg font-bold">yes</button
+				class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">yes</button
 			>
 		</div>
 	</article>
@@ -147,9 +149,9 @@
 	</div>
 
 	<article class="flex w-full flex-col gap-4 p-6 sm:px-8">
-		<p class="flex items-center gap-3 pt-1 text-lg font-bold">
+		<h2 class="flex items-center gap-3 pt-1 text-lg font-bold">
 			<Heart class="text-[var(--pico-error)]" />Previous Swipes
-		</p>
+		</h2>
 		<div class="flex flex-wrap items-center gap-x-4">
 			{#if swipesState.status === 'idle' || swipesState.status === 'loading'}
 				<p class="py-1 text-[var(--pico-muted-color)]">Loading previous swipes...</p>
