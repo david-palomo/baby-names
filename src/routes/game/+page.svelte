@@ -88,7 +88,7 @@
 	});
 </script>
 
-<div in:fly>
+<div in:fly={{ x: 10, duration: 300 }}>
 	<article
 		class="mb-6 flex h-80 max-h-[55vh] min-h-72 flex-col items-center justify-center text-center 2xs:h-96"
 	>

@@ -62,7 +62,7 @@
 	<span>Back to swiping</span>
 </a>
 
-<div in:fly={{ y: 20, duration: 300 }}>
+<div in:fly={{ x: 10, duration: 300 }} out:fly={{ x: 10, duration: 150 }}>
 	<!-- Section to share connection link -->
 	<article class="mb-6 p-8 text-center">
 		<h2 class="font-title text-2xl font-bold tracking-wide">Send this link to your partner!</h2>
