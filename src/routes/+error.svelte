@@ -9,7 +9,7 @@
 	<article class="flex flex-col items-center justify-center gap-3 py-10 text-center">
 		<p class="font-title text-3xl font-bold xl:text-4xl">Oh no! 🫢</p>
 		<p class="text-[var(--pico-muted-color)]">Looks like something went wrong...</p>
-		<enhanced:img class="rounded" src={peanutBaby} alt="Peanut Butter Baby meme" />
+		<img class="rounded" src={peanutBaby} alt="Peanut Butter Baby meme" />
 		<p class="max-w-64 text-balance text-[var(--pico-muted-color)]">
 			The site is under construction, so it might as well be our fault
 		</p>
