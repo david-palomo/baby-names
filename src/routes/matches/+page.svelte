@@ -5,14 +5,20 @@
 	import type { Match, Partner } from '$lib/types';
 	import { fly } from 'svelte/transition';
 	import { ArrowLeft } from 'lucide-svelte';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate } from '$app/navigation';
 
+	// Component State
 	let matches = $state<Match[]>([]);
 	let partners = $state<Partner[]>([]);
-	let selectedPartnerId = $state<string | null>(null);
-	let isLoading = $state(true);
+	let isLoading = $state({ partners: true, matches: true });
 	let previousPage = $state('/game');
 
+	// Filter State - The component's internal state is now the source of truth.
+	let selectedPartnerId = $state<string | null>(null);
+	let genderFilter = $state('any');
+	let originFilter = $state('any');
+
+	// Preserve the "back" link destination
 	afterNavigate(({ from }) => {
 		const pathname = from?.url.pathname;
 		if (pathname && !pathname.startsWith('/matches')) {
@@ -22,7 +28,7 @@
 
 	$effect(() => {
 		if (!store.user) return;
-
+		isLoading.partners = true;
 		const fetchPartners = async () => {
 			const { data, error } = await supabase
 				.from('v_partners')
@@ -32,52 +38,50 @@
 				console.error('Error fetching partners:', error);
 			} else {
 				partners = data || [];
-				if (partners.length > 0 && !page.url.searchParams.get('id')) {
-					goto(`/matches?id=${partners[0].id}`, { replaceState: true });
+				const partnerIdFromUrl = page.url.searchParams.get('id');
+				if (partners.find((p) => p.id === partnerIdFromUrl)) {
+					selectedPartnerId = partnerIdFromUrl;
+				} else if (partners.length > 0) {
+					selectedPartnerId = partners[0].id;
 				}
 			}
+			isLoading.partners = false;
 		};
 		fetchPartners();
 	});
 
 	$effect(() => {
-		const partnerIdFromUrl = page.url.searchParams.get('id');
-		selectedPartnerId = partnerIdFromUrl;
-	});
-
-	$effect(() => {
-		if (!selectedPartnerId || !store.user?.id) {
+		const partnerId = selectedPartnerId;
+		if (!partnerId || !store.user?.id) {
 			matches = [];
-			isLoading = false;
+			isLoading.matches = false;
 			return;
 		}
 
-		isLoading = true;
+		isLoading.matches = true;
 		const fetchMatches = async () => {
-			console.log(selectedPartnerId);
 			const { data, error } = await supabase
 				.from('v_matches')
 				.select('name')
-				.or(`user_id.eq.${selectedPartnerId},partner_id.eq.${selectedPartnerId}`);
-			console.log(data);
+				.or(`user_id.eq.${partnerId},partner_id.eq.${partnerId}`);
 			if (error) {
 				console.error('Error fetching matches:', error);
 				matches = [];
 			} else {
 				matches = data || [];
 			}
-			isLoading = false;
+			isLoading.matches = false;
 		};
 		fetchMatches();
 	});
 
-	function handlePartnerChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		const newPartnerId = target.value;
-		if (newPartnerId) {
-			goto(`/matches?id=${newPartnerId}`);
+	$effect(() => {
+		if (selectedPartnerId) {
+			const url = new URL(window.location.href);
+			url.searchParams.set('id', selectedPartnerId);
+			history.replaceState(history.state, '', url);
 		}
-	}
+	});
 </script>
 
 <a
@@ -92,49 +96,67 @@
 <div in:fly={{ x: 10, duration: 300 }} out:fly={{ x: 10, duration: 150 }}>
 	<h1 class="pb-6 font-title text-2xl font-bold opacity-90">Matches</h1>
 
-	{#if partners.length > 0}
-		<div class="mb-6">
-			<label for="partner-select" class="block pb-2 font-bold">Select a partner:</label>
-			<select
-				id="partner-select"
-				onchange={handlePartnerChange}
-				bind:value={selectedPartnerId}
-				class="w-full"
-				aria-label="Select a partner to view matches"
-			>
-				{#if !selectedPartnerId}
-					<option value={null} disabled selected>Select a partner</option>
-				{/if}
-				{#each partners as partner}
-					<option value={partner.id}>{partner.name}</option>
-				{/each}
-			</select>
+	<!-- Filters -->
+	<article class="mb-6 px-6 pb-5">
+		<div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
+			<div class="sm:col-span-1">
+				<label for="partner-select">Partner</label>
+				<select
+					id="partner-select"
+					bind:value={selectedPartnerId}
+					aria-busy={isLoading.partners}
+					disabled={isLoading.partners || partners.length === 0}
+				>
+					{#if isLoading.partners}
+						<option>Loading...</option>
+					{:else if partners.length === 0}
+						<option>No partners found</option>
+					{:else}
+						{#each partners as partner}
+							<option value={partner.id}>{partner.name}</option>
+						{/each}
+					{/if}
+				</select>
+			</div>
+			<div class="sm:col-span-1">
+				<label for="gender-filter">Gender</label>
+				<select id="gender-filter" bind:value={genderFilter}>
+					<option value="any">Any</option>
+					<option value="Male">Male</option>
+					<option value="Female">Female</option>
+				</select>
+			</div>
+			<div class="sm:col-span-1">
+				<label for="origin-filter">Origin</label>
+				<select id="origin-filter" bind:value={originFilter}>
+					<option value="any">Any</option>
+					<option value="English">English</option>
+					<option value="Spanish">Spanish</option>
+				</select>
+			</div>
 		</div>
-	{/if}
+	</article>
 
-	{#if isLoading}
+	<!-- Matches Grid -->
+	{#if isLoading.matches}
 		<p aria-busy="true" class="mt-4">Loading matches...</p>
 	{:else if matches.length > 0}
-		<div class="grid">
+		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
 			{#each matches as match (match.name)}
-				<article>
-					<p class="font-bold">{match.name}</p>
+				<article class="!m-0 !p-3 text-center">
+					<p class="font-medium">{match.name}</p>
 				</article>
 			{/each}
 		</div>
-	{:else if selectedPartnerId}
-		<article class="text-center">
-			<p>You have no matches yet with this partner.</p>
-			<p class="text-sm" style="color: var(--pico-muted-color);">
-				Keep swiping to find names you both like.
-			</p>
-		</article>
 	{:else}
-		<article class="text-center">
-			<p>You don't have any partners yet.</p>
+		<article class="mt-4 text-center">
+			<p>No matches found.</p>
 			<p class="text-sm" style="color: var(--pico-muted-color);">
-				<a href="/partners" class="text-[var(--pico-primary)]">Connect with a partner</a> to see your
-				matches.
+				{#if selectedPartnerId}
+					Keep swiping to find names you both like!
+				{:else}
+					<a href="/partners" class="text-[var(--pico-primary)]">Connect with a partner</a> to see matches.
+				{/if}
 			</p>
 		</article>
 	{/if}
