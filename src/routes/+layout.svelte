@@ -9,7 +9,7 @@
 	import { githubLink, githubUser, projectTitleAbove, projectTitle } from '$lib/config';
 	import Link from '$lib/components/Link.svelte';
 	import { page } from '$app/state';
-	import { invalidateAll } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, invalidateAll } from '$app/navigation';
 
 	let { data, children } = $props();
 	let theme: string;
@@ -34,6 +34,19 @@
 
 	$effect(() => {
 		store.user = data.user;
+	});
+
+	beforeNavigate(({ type }) => {
+		if (type === 'popstate') {
+			store.transitionDirection = -1;
+		}
+	});
+	afterNavigate(({ from }) => {
+		const fromPath = from?.url.pathname;
+		if (fromPath && fromPath != page.url.pathname) {
+			store.previousPath = fromPath;
+		}
+		store.transitionDirection = 1;
 	});
 </script>
 

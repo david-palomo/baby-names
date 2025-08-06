@@ -14,7 +14,7 @@
 			Doesn't matter if you're expecting a baby...
 		</p>
 		<p class="text-sm text-[var(--pico-muted-color)]">Or if you just met 👀</p>
-		<a href="/game" role="button" class="mt-8 py-2 text-lg xl:mt-10">start swiping 👉</a>
+		<a href="/swiping" role="button" class="mt-8 py-2 text-lg xl:mt-10">start swiping 👉</a>
 	</article>
 
 	<article class="px-8 py-6 sm:px-12 sm:py-8">

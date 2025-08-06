@@ -4,27 +4,15 @@
 	import { store } from '$lib/store.svelte';
 	import type { Match, Partner } from '$lib/types';
 	import { fly } from 'svelte/transition';
-	import { ArrowLeft } from 'lucide-svelte';
-	import { afterNavigate } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
+	import BackButton from '$lib/components/BackButton.svelte';
 
-	// Component State
 	let matches = $state<Match[]>([]);
 	let partners = $state<Partner[]>([]);
 	let isLoading = $state({ partners: true, matches: true });
-	let previousPage = $state('/game');
-
-	// Filter State - The component's internal state is now the source of truth.
 	let selectedPartnerId = $state<string | null>(null);
 	let genderFilter = $state('any');
 	let originFilter = $state('any');
-
-	// Preserve the "back" link destination
-	afterNavigate(({ from }) => {
-		const pathname = from?.url.pathname;
-		if (pathname && !pathname.startsWith('/matches')) {
-			previousPage = pathname;
-		}
-	});
 
 	$effect(() => {
 		if (!store.user) return;
@@ -79,21 +67,13 @@
 		if (selectedPartnerId) {
 			const url = new URL(window.location.href);
 			url.searchParams.set('id', selectedPartnerId);
-			history.replaceState(history.state, '', url);
+			replaceState(url, history.state);
 		}
 	});
 </script>
 
-<a
-	href={previousPage}
-	class="flex items-center gap-2 pb-5 text-[var(--pico-primary)] underline-offset-8 hover:underline"
-	aria-label="Back"
->
-	<ArrowLeft />
-	<span>Back to {previousPage.replace('/', '')}</span>
-</a>
-
-<div in:fly={{ x: 10, duration: 300 }} out:fly={{ x: 10, duration: 150 }}>
+<BackButton href="/swiping" />
+<div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
 	<h1 class="pb-6 font-title text-2xl font-bold opacity-90">Matches</h1>
 
 	<!-- Filters -->
