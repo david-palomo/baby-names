@@ -3,7 +3,7 @@ import type { LayoutLoad } from './$types';
 import { getUser } from '$lib/supabase';
 
 // TODO: add settings, swipes pages
-const protectedRoutes = ['/partners', '/connect', '/matches', '/game'];
+const protectedRoutes = ['/partners', '/connect', '/matches'];
 
 export const load: LayoutLoad = async ({ url }) => {
     const user = await getUser();
