@@ -4,7 +4,7 @@
 
 <div in:fly={{ y: -20, duration: 300 }}>
 	<article
-		class="mb-6 flex h-80 max-h-[55vh] min-h-72 flex-col items-center justify-center text-center 2xs:h-96"
+		class="mb-6 flex max-h-[55vh] min-h-80 flex-col items-center justify-center text-center 2xs:h-96"
 	>
 		<p class="font-title text-3xl font-bold xl:text-4xl">
 			<span class="block">Find a baby name</span>
@@ -35,11 +35,11 @@
 				</p>
 			</div> -->
 			<h2 class="flex flex-row items-center gap-2 py-1 font-title text-2xl font-bold">
-				<span>Did you know? 🌐</span>
+				<span>Random fact 🔀</span>
 			</h2>
 			<p class="mt-2 text-[var(--pico-muted-color)]">
-				In <em>Iceland</em>, a national commitee must approve new unlisted names. Until then, the
-				child will be literally called "Girl" (Stúlka) or "Boy" (Drengur).
+				In <em>Iceland</em>, a committee must approve new unlisted names. Until approval, the child
+				is literally called <em>'Girl'</em> (Stúlka) or <em>'Boy'</em> (Drengur).
 			</p>
 		</article>
 	</div>
@@ -48,9 +48,5 @@
 <style>
 	.list-emoji li::marker {
 		content: var(--marker-content) '  ';
-	}
-	em {
-		font-style: normal;
-		color: var(--pico-primary);
 	}
 </style>

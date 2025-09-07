@@ -55,6 +55,7 @@
 </script>
 
 <BackButton href="/swiping" />
+
 <div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
 	<!-- Section to share connection link -->
 	<article class="mb-6 p-8 text-center">

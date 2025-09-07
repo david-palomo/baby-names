@@ -7,6 +7,7 @@
 	import { fetchState } from '$lib/fetchState.svelte';
 	import type { BabyName, Swipe, SwipedName } from '$lib/types';
 	import { untrack } from 'svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 
 	let swipes = $state<SwipedName[]>([]);
 	let names = $state<BabyName[]>([]);
@@ -88,9 +89,11 @@
 	});
 </script>
 
+<BackButton href="/" />
+
 <div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
 	<article
-		class="mb-6 flex h-80 max-h-[55vh] min-h-72 flex-col items-center justify-center text-center 2xs:h-96"
+		class="mb-6 flex max-h-[55vh] min-h-[17.5rem] flex-col items-center justify-center text-center 2xs:h-[21.5rem]"
 	>
 		<p class="text-lg text-[var(--pico-muted-color)]">Do you like this name?</p>
 		<p class="flex h-20 items-center font-title text-4xl font-bold">

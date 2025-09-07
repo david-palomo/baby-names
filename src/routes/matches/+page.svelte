@@ -73,6 +73,7 @@
 </script>
 
 <BackButton href="/swiping" />
+
 <div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
 	<h1 class="pb-6 font-title text-2xl font-bold opacity-90">Matches</h1>
 

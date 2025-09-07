@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ArrowLeft } from 'lucide-svelte';
-	import { defaultPath, store } from '$lib/store.svelte';
+	import { store } from '$lib/store.svelte';
 	import { goto } from '$app/navigation';
 
 	let { href }: { href?: string } = $props();
@@ -18,5 +18,5 @@
 	onclick={handleClick}
 >
 	<ArrowLeft />
-	<span>Back to {(href || store.previousPath || defaultPath).replace('/', '')}</span>
+	<span>Back to {(href || store.previousPath)?.replace(/^.*[\\/]/, '') || 'homepage'}</span>
 </button>
