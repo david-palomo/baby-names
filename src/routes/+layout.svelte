@@ -73,13 +73,9 @@
 			</ul>
 			<ul>
 				<li class="py-0">
-					<a href="/" class="my-0.5 flex flex-col items-center font-bold lg:my-1">
+					<a href="/" class="my-0.5 flex flex-col items-center font-bold lowercase lg:my-1">
 						<span class="text-xs uppercase text-[var(--pico-primary)]">{projectTitleAbove}</span>
-						<span
-							class="flex items-center space-x-2 font-title text-lg lowercase 3xs:text-xl 2xs:text-2xl"
-						>
-							{projectTitle}
-						</span>
+						<span class="whitespace-nowrap font-title text-xl 2xs:text-2xl">{projectTitle}</span>
 					</a>
 				</li>
 			</ul>
