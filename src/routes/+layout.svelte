@@ -9,7 +9,7 @@
 	import { githubLink, githubUser, projectTitleAbove, projectTitle } from '$lib/config';
 	import Link from '$lib/components/Link.svelte';
 	import { page } from '$app/state';
-	import { afterNavigate, beforeNavigate, invalidateAll } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, goto, invalidateAll } from '$app/navigation';
 
 	let { data, children } = $props();
 	let theme: string;
@@ -28,6 +28,7 @@
 	}
 
 	async function signOut() {
+		await goto('/');
 		await supabase.auth.signOut();
 		invalidateAll();
 	}
