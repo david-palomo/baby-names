@@ -34,8 +34,9 @@ label {
 em {
     color: var(--pico-secondary);
     font-style: normal;
-    text-decoration: underline wavy var(--pico-accent2);
-    text-underline-offset: 4px;
+    text-decoration: underline wavy var(--pico-accent3);
+    text-decoration-skip-ink: none;
+    text-underline-offset: 0.25rem;
     font-weight: bold;
 }
 
