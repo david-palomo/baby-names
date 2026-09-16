@@ -1,5 +1,8 @@
-<script>
+<script lang="ts">
 	import { fly } from 'svelte/transition';
+	import { useTranslate } from '$lib/i18n.svelte';
+
+	const t = useTranslate();
 </script>
 
 <div in:fly={{ y: -20, duration: 300 }}>
@@ -7,40 +10,32 @@
 		class="mb-6 flex max-h-[55vh] min-h-80 flex-col items-center justify-center text-center 2xs:h-96"
 	>
 		<p class="font-title text-3xl font-bold xl:text-4xl">
-			<span class="block">Find a baby name</span>
-			<span class="block">you both like!</span>
+			<span class="block">{t('home.title1')}</span>
+			<span class="block">{t('home.title2')}</span>
 		</p>
-		<p class="mt-8 text-[var(--pico-muted-color)]">Doesn't matter if you're expecting a baby...</p>
-		<p class="text-[var(--pico-muted-color)]">Or if you just met 👀</p>
-		<a href="/swiping" role="button" class="mt-8 py-2 text-lg xl:mt-10">start swiping 👉</a>
+		<p class="mt-8 text-[var(--pico-muted-color)]">{t('home.sub1')}</p>
+		<p class="text-[var(--pico-muted-color)]">{t('home.sub2')}</p>
+		<a href="/swiping" role="button" class="mt-8 py-2 text-lg xl:mt-10">{t('home.cta')}</a>
 	</article>
 
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-9">
 		<article class="flex flex-col justify-evenly px-8 py-6 sm:col-span-5 lg:px-10 lg:py-8">
-			<h2 class="py-1 font-title text-2xl font-bold">How does it work?</h2>
+			<h2 class="py-1 font-title text-2xl font-bold">{t('home.howTitle')}</h2>
 			<ul class="list-emoji list-disc pl-6 pt-4 text-[var(--pico-muted-color)]">
-				<li style="--marker-content: '👉'">Swipe right if you like a name</li>
-				<li style="--marker-content: '👈'">Swipe left if you don't</li>
-				<li style="--marker-content: '🔒'">Sign in to save your swipes</li>
-				<li style="--marker-content: '💑'">Connect with a partner</li>
-				<li style="--marker-content: '🎉'">See your matched names!</li>
+				<li style="--marker-content: '👉'">{t('home.how1')}</li>
+				<li style="--marker-content: '👈'">{t('home.how2')}</li>
+				<li style="--marker-content: '🔒'">{t('home.how3')}</li>
+				<li style="--marker-content: '💑'">{t('home.how4')}</li>
+				<li style="--marker-content: '🎉'">{t('home.how5')}</li>
 			</ul>
 		</article>
 		<article class="flex flex-col justify-between px-8 py-6 sm:col-span-4 lg:px-10 lg:py-8">
-			<!-- <h2 class="py-1 font-title text-2xl font-bold">Name of the Day</h2>
-			<div class="text-right">
-				<p class="xl mt-2 font-title text-3xl font-bold text-[var(--pico-primary)]">Olivia</p>
-				<p class="mt-2 text-balance text-[var(--pico-muted-color)]">
-					A timeless name that means "olive tree," symbolizing peace and harmony.
-				</p>
-			</div> -->
 			<h2 class="flex flex-row items-center gap-2 py-1 font-title text-2xl font-bold">
-				<span>Random fact 🔀</span>
+				<span>{t('home.factTitle')}</span>
 			</h2>
-			<p class="mt-2 text-[var(--pico-muted-color)]">
-				In <em>Iceland</em>, a committee must approve new unlisted names. Until approval, the child
-				is literally called <em>'Girl'</em> (Stúlka) or <em>'Boy'</em> (Drengur).
-			</p>
+			<!-- Static copy from our own dictionary, never user input; only <em> markup. -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<p class="mt-2 text-[var(--pico-muted-color)]">{@html t('home.factHtml')}</p>
 		</article>
 	</div>
 </div>

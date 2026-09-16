@@ -5,6 +5,9 @@
 	import { supabase } from '$lib/supabase';
 	import { store } from '$lib/store.svelte';
 	import Link from '$lib/components/Link.svelte';
+	import { useTranslate } from '$lib/i18n.svelte';
+
+	const t = useTranslate();
 
 	let errorDescription = $state('');
 	$effect(() => {
@@ -33,14 +36,16 @@
 
 <article class="flex flex-col items-center justify-center gap-3 py-8 text-center">
 	{#if errorDescription}
-		<p class="font-title text-3xl font-bold xl:text-4xl">Oh no! 🫢</p>
-		<p>Seems there was an error logging in...</p>
+		<p class="font-title text-3xl font-bold xl:text-4xl">{t('error.title')}</p>
+		<p>{t('callback.errorSub')}</p>
 		<img class="rounded" src={peanutBaby} alt="Peanut Butter Baby meme" />
 		<p>
-			Please, <Link className="text-var(--pico-primary-color)" href="/auth/login">try again</Link>!
+			{t('callback.retryPre')}<Link className="text-var(--pico-primary-color)" href="/auth/login"
+				>{t('callback.retryLink')}</Link
+			>{t('callback.retryPost')}
 		</p>
 	{:else}
 		<img class="max-w-72 rounded" src={catLoading} alt="Loading..." />
-		<span>Processing login, please wait...</span>
+		<span>{t('callback.processing')}</span>
 	{/if}
 </article>
