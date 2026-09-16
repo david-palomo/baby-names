@@ -19,7 +19,18 @@ export default ts.config(
 		}
 	},
 	{
-		files: ['**/*.svelte'],
+		rules: {
+			// Let `_`-prefixed bindings (e.g. an unused {#each} item) stay unused.
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+			]
+		}
+	},
+	{
+		// eslint-plugin-svelte also parses .svelte.ts / .svelte.js modules, which
+		// need the TS parser to understand type syntax.
+		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 
 		languageOptions: {
 			parserOptions: {
@@ -28,6 +39,6 @@ export default ts.config(
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/']
+		ignores: ['build/', '.svelte-kit/', 'dist/', '.vercel/']
 	}
 );
