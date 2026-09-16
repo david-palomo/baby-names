@@ -114,7 +114,9 @@
 				metadata = {};
 			} else {
 				matches = data || [];
-				await fetchMetadata(matches.map((m) => m.name));
+				// Derive the names from `data`, not from `matches`: reading state the
+				// effect also writes makes the effect depend on its own output.
+				await fetchMetadata((data || []).map((m) => m.name));
 			}
 			isLoading.matches = false;
 		};
