@@ -7,6 +7,7 @@
 	import { Heart, Undo, RefreshCw, X } from 'lucide-svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import { useTranslate } from '$lib/i18n.svelte';
+	import { dedupeById } from '$lib/swipes';
 	import { untrack } from 'svelte';
 
 	const t = useTranslate();
@@ -39,7 +40,7 @@
 		if (error) {
 			swipesState.setError(error.message);
 		} else {
-			swipes = data || [];
+			swipes = dedupeById(data);
 			swipesState.setSuccess();
 		}
 	}
