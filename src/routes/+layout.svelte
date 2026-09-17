@@ -116,7 +116,11 @@
 			</ul>
 		</nav>
 
-		<article class="mb-5 select-none px-0 py-2">
+		<!-- The marquee is a landing-page flourish. On a phone it competes with
+		     the swipe card for both height and attention, so it steps aside. -->
+		<article
+			class="mb-5 select-none px-0 py-2 {page.url.pathname === '/swiping' ? 'hidden sm:block' : ''}"
+		>
 			<Marquee {items} duration={140} />
 		</article>
 

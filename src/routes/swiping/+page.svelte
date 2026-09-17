@@ -238,114 +238,124 @@
 <BackButton href="/" />
 
 <div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
-	<!-- Fixed height, so nothing reflows when the info slot swaps. -->
-	<div
-		class="card-drag mb-6 max-h-[55vh] min-h-[17.5rem] 2xs:h-[21.5rem]"
-		class:dragging
-		class:resetting
-		class:flying={flyOut !== 0}
-		style:transform={cardTransform}
-		style:--swipe-tint={swipeTint}
-		style:--fly-ms={`${FLY_MS}ms`}
-		onpointerdown={onPointerDown}
-		onpointermove={onPointerMove}
-		onpointerup={onPointerUp}
-		onpointercancel={onPointerUp}
-	>
-		<article class="card-face flex flex-col items-center justify-center text-center">
-			<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
-			<p class="flex h-20 items-center font-title text-4xl font-bold">
-				{#if namesState.status === 'idle' || namesState.status === 'loading'}
-					...
-				{:else if namesState.status === 'error'}
-					<span class="text-base text-[var(--pico-error)]">{t('swiping.errorNames')}</span>
-				{:else if currentName}
-					{currentName.name}
-				{:else}
-					{t('swiping.noNamesLeft')}
-				{/if}
-			</p>
+	<!-- On a phone the deck fills the screen, so swiping *is* the page and
+	     "previous swipes" sits just below the fold. Desktop is unchanged. -->
+	<section class="deck flex flex-col">
+		<!-- Height is fixed at any given moment, so nothing reflows when the
+		     info slot swaps; it just fills the deck on mobile. -->
+		<div
+			class="card-drag w-full flex-1"
+			class:dragging
+			class:resetting
+			class:flying={flyOut !== 0}
+			style:transform={cardTransform}
+			style:--swipe-tint={swipeTint}
+			style:--fly-ms={`${FLY_MS}ms`}
+			onpointerdown={onPointerDown}
+			onpointermove={onPointerMove}
+			onpointerup={onPointerUp}
+			onpointercancel={onPointerUp}
+		>
+			<article
+				class="card-face flex flex-col items-center justify-between py-8 text-center sm:justify-center sm:py-0"
+			>
+				<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
 
-			<!-- Always-on info line. Fixed height so a name without metadata
-			     leaves the rest of the card exactly where it is. -->
-			<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
-				{#if infoParts}
-					<!-- Flex rather than inline text, so the gaps either side of the
-					     separator are exactly equal and don't depend on whitespace. -->
-					<p class="m-0 flex max-w-xs flex-wrap items-baseline justify-center gap-x-2 text-sm">
-						{#if infoParts.origin}
-							<span class="font-bold text-[var(--pico-primary)]">{infoParts.origin}</span>
-						{/if}
-						{#if infoParts.origin && infoParts.meaning}
-							<span class="text-[var(--pico-primary)]" aria-hidden="true">|</span>
-						{/if}
-						{#if infoParts.meaning}
-							<span class="text-balance">{infoParts.meaning}</span>
+				<div class="flex w-full flex-1 flex-col items-center justify-center sm:flex-none">
+					<p class="flex h-20 items-center font-title text-5xl font-bold sm:text-4xl">
+						{#if namesState.status === 'idle' || namesState.status === 'loading'}
+							...
+						{:else if namesState.status === 'error'}
+							<span class="text-base text-[var(--pico-error)]">{t('swiping.errorNames')}</span>
+						{:else if currentName}
+							{currentName.name}
+						{:else}
+							{t('swiping.noNamesLeft')}
 						{/if}
 					</p>
-				{/if}
-			</div>
 
-			<div class="flex items-center justify-center gap-2 pt-2 4xs:gap-3">
-				<button
-					onclick={() => commitSwipe(false)}
-					type="button"
-					disabled={!currentName}
-					class="error-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.no')}</button
+					<!-- Always-on info line. Fixed height so a name without metadata
+			     leaves the rest of the card exactly where it is. -->
+					<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
+						{#if infoParts}
+							<!-- Flex rather than inline text, so the gaps either side of the
+					     separator are exactly equal and don't depend on whitespace. -->
+							<p class="m-0 flex max-w-xs flex-wrap items-baseline justify-center gap-x-2 text-sm">
+								{#if infoParts.origin}
+									<span class="font-bold text-[var(--pico-primary)]">{infoParts.origin}</span>
+								{/if}
+								{#if infoParts.origin && infoParts.meaning}
+									<span class="text-[var(--pico-primary)]" aria-hidden="true">|</span>
+								{/if}
+								{#if infoParts.meaning}
+									<span class="text-balance">{infoParts.meaning}</span>
+								{/if}
+							</p>
+						{/if}
+					</div>
+				</div>
+				<div class="flex items-center justify-center gap-2 pt-2 4xs:gap-3">
+					<button
+						onclick={() => commitSwipe(false)}
+						type="button"
+						disabled={!currentName}
+						class="error-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24"
+						>{t('swiping.no')}</button
+					>
+					<button
+						onclick={() => commitSwipe(true)}
+						type="button"
+						disabled={!currentName}
+						class="ok-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.yes')}</button
+					>
+				</div>
+
+				<!-- Drag intent badges -->
+				<span
+					class="badge badge-yes"
+					class:stamped={flyOut !== 0}
+					aria-hidden="true"
+					style:opacity={intent > 0 ? intentStrength : 0}
 				>
-				<button
-					onclick={() => commitSwipe(true)}
-					type="button"
-					disabled={!currentName}
-					class="ok-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.yes')}</button
+					{t('swiping.yes')}
+				</span>
+				<span
+					class="badge badge-no"
+					class:stamped={flyOut !== 0}
+					aria-hidden="true"
+					style:opacity={intent < 0 ? intentStrength : 0}
 				>
-			</div>
+					{t('swiping.no')}
+				</span>
+			</article>
+		</div>
 
-			<!-- Drag intent badges -->
-			<span
-				class="badge badge-yes"
-				class:stamped={flyOut !== 0}
-				aria-hidden="true"
-				style:opacity={intent > 0 ? intentStrength : 0}
+		<div class="mt-4 flex gap-4">
+			<a
+				href="/partners"
+				class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-primary)] xs:px-5"
 			>
-				{t('swiping.yes')}
-			</span>
-			<span
-				class="badge badge-no"
-				class:stamped={flyOut !== 0}
-				aria-hidden="true"
-				style:opacity={intent < 0 ? intentStrength : 0}
+				<Users class="text-[var(--pico-primary)]" />
+				<span class="hidden px-2 xs:inline">{t('swiping.partners')}</span>
+			</a>
+			<a
+				href="/matches"
+				class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-error)] xs:px-5"
 			>
-				{t('swiping.no')}
-			</span>
-		</article>
-	</div>
+				<IconBrandTinder class="text-[var(--pico-error)]" />
+				<span class="px-2">{t('swiping.matches')}</span>
+			</a>
+			<a
+				href="/settings"
+				class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-accent3)] xs:px-5"
+			>
+				<Settings class="text-[var(--pico-accent3)]" />
+				<span class="hidden px-2 xs:inline">{t('swiping.settings')}</span>
+			</a>
+		</div>
+	</section>
 
-	<div class="mb-6 flex gap-4">
-		<a
-			href="/partners"
-			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-primary)] xs:px-5"
-		>
-			<Users class="text-[var(--pico-primary)]" />
-			<span class="hidden px-2 xs:inline">{t('swiping.partners')}</span>
-		</a>
-		<a
-			href="/matches"
-			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-error)] xs:px-5"
-		>
-			<IconBrandTinder class="text-[var(--pico-error)]" />
-			<span class="px-2">{t('swiping.matches')}</span>
-		</a>
-		<a
-			href="/settings"
-			class="card flex w-full items-center justify-center px-3 py-3 hover:border-[var(--pico-accent3)] xs:px-5"
-		>
-			<Settings class="text-[var(--pico-accent3)]" />
-			<span class="hidden px-2 xs:inline">{t('swiping.settings')}</span>
-		</a>
-	</div>
-
-	<article class="flex w-full flex-col gap-4 p-6 sm:px-8">
+	<article class="mt-6 flex w-full flex-col gap-4 p-6 sm:px-8">
 		<div class="flex flex-col gap-1">
 			<h2 class="m-0 flex items-center gap-3 pt-1 text-lg font-bold">
 				<Heart class="text-[var(--pico-error)]" />{t('swiping.previousSwipes')}
@@ -385,6 +395,26 @@
 </div>
 
 <style>
+	.deck {
+		/* Leaves room for the nav and the back link, so the tiles land at the
+		   bottom of the first screen and previous swipes just below it. */
+		min-height: calc(100dvh - 10rem);
+	}
+
+	/* Above sm the deck stops filling the screen and the card goes back to its
+	   original fixed size. Kept here rather than in `sm:` utilities so the two
+	   halves of the rule live together. */
+	@media (min-width: 640px) {
+		.deck {
+			min-height: 0;
+		}
+		.card-drag {
+			height: 21.5rem;
+			max-height: 55vh;
+			flex: none;
+		}
+	}
+
 	.card-drag {
 		transition: transform 260ms ease-out;
 		touch-action: pan-y;
