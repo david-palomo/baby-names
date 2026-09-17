@@ -57,9 +57,12 @@
 				? `translateX(${dragX}px) rotate(${dragX / 22}deg)`
 				: ''
 	);
-	// 0 = undecided, 1 = heading for yes, -1 = heading for no
-	const intent = $derived(Math.abs(dragX) < 35 ? 0 : Math.sign(dragX));
-	const intentStrength = $derived(Math.min(1, Math.abs(dragX) / SWIPE_THRESHOLD));
+	// Which stamp to show: 0 = undecided, 1 = yes, -1 = no. Once the card is
+	// flying out the answer is settled, so the stamp stays at full strength.
+	const intent = $derived(flyOut !== 0 ? flyOut : Math.abs(dragX) < 35 ? 0 : Math.sign(dragX));
+	const intentStrength = $derived(
+		flyOut !== 0 ? 1 : Math.min(1, Math.abs(dragX) / SWIPE_THRESHOLD)
+	);
 
 	function onPointerDown(event: PointerEvent) {
 		if (!currentName || info.open || flyOut !== 0) return;
@@ -101,18 +104,34 @@
 		pointerId = null;
 
 		if (axis === 'h' && Math.abs(dx) >= SWIPE_THRESHOLD) {
-			commitSwipe(dx > 0);
+			commitSwipe(dx > 0, true);
 		} else {
 			dragX = 0;
 		}
 		axis = null;
 	}
 
-	/** Animates the card off-screen, then records the swipe. */
-	async function commitSwipe(liked: boolean) {
+	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+	/**
+	 * Stamps the card yes/no, animates it off-screen, then records the swipe.
+	 *
+	 * A drag already showed the stamp while the pointer was down, so it flies
+	 * off straight away. The buttons and the arrow keys tilt the card to the
+	 * threshold first and hold for a beat, so every way of answering gives the
+	 * same confirmation.
+	 */
+	async function commitSwipe(liked: boolean, fromGesture = false) {
 		if (!currentName || flyOut !== 0) return;
-		flyOut = liked ? 1 : -1;
-		await new Promise((r) => setTimeout(r, 260));
+		const direction = liked ? 1 : -1;
+
+		if (!fromGesture) {
+			dragX = direction * SWIPE_THRESHOLD;
+			await wait(200);
+		}
+
+		flyOut = direction;
+		await wait(260);
 
 		resetting = true;
 		flyOut = 0;
@@ -311,10 +330,20 @@
 					</p>
 
 					<!-- Drag intent badges -->
-					<span class="badge badge-yes" style:opacity={intent > 0 ? intentStrength : 0}>
+					<span
+						class="badge badge-yes"
+						class:stamped={flyOut !== 0}
+						aria-hidden="true"
+						style:opacity={intent > 0 ? intentStrength : 0}
+					>
 						{t('swiping.yes')}
 					</span>
-					<span class="badge badge-no" style:opacity={intent < 0 ? intentStrength : 0}>
+					<span
+						class="badge badge-no"
+						class:stamped={flyOut !== 0}
+						aria-hidden="true"
+						style:opacity={intent < 0 ? intentStrength : 0}
+					>
 						{t('swiping.no')}
 					</span>
 				</article>
@@ -458,19 +487,29 @@
 		border-radius: var(--pico-border-radius);
 		padding: 0.1rem 0.75rem;
 		pointer-events: none;
-		transition: opacity 120ms linear;
+		transition:
+			opacity 120ms linear,
+			transform 160ms ease-out;
 	}
 	.badge-yes {
 		left: 1.25rem;
 		color: var(--pico-ok-bg);
 		border-color: var(--pico-ok-bg);
-		transform: rotate(-12deg);
+		transform: rotate(-12deg) scale(1);
+	}
+	/* Pops once the answer is settled, so a tap or a key press lands as
+	   firmly as a swipe does. */
+	.badge-yes.stamped {
+		transform: rotate(-12deg) scale(1.15);
 	}
 	.badge-no {
 		right: 1.25rem;
 		color: var(--pico-error);
 		border-color: var(--pico-error);
-		transform: rotate(12deg);
+		transform: rotate(12deg) scale(1);
+	}
+	.badge-no.stamped {
+		transform: rotate(12deg) scale(1.15);
 	}
 
 	.error-btn {
@@ -493,7 +532,8 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.card-drag,
-		.flip-inner {
+		.flip-inner,
+		.badge {
 			transition: none;
 		}
 	}
