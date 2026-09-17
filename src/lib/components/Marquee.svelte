@@ -7,9 +7,9 @@
 </script>
 
 <div class="flex overflow-x-hidden">
-	{#each { length: 2 } as _}
+	{#each { length: 2 } as _, copy (copy)}
 		<div class="marquee" style="animation-duration: {duration}s">
-			{#each items as item}
+			{#each items as item, i (i)}
 				<span class="mr-3.5 opacity-80">{item}</span>
 			{/each}
 		</div>
