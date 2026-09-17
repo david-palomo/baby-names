@@ -67,7 +67,6 @@ const en = {
 	'swiping.seeMore': '... see more',
 	'swiping.infoLoading': 'Looking it up...',
 	'swiping.infoNone': 'No extra info for this name yet.',
-	'swiping.infoGender': 'Gender',
 	'swiping.infoOrigin': 'Origin',
 	'swiping.infoMeaning': 'Meaning',
 
@@ -240,7 +239,6 @@ const es: Record<MessageKey, string> = {
 	'swiping.seeMore': '... ver más',
 	'swiping.infoLoading': 'Buscando...',
 	'swiping.infoNone': 'Todavía no hay más info de este nombre.',
-	'swiping.infoGender': 'Género',
 	'swiping.infoOrigin': 'Origen',
 	'swiping.infoMeaning': 'Significado',
 

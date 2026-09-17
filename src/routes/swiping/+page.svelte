@@ -31,10 +31,10 @@
 	const infoRows = $derived.by(() => {
 		const d = info.data;
 		if (!d) return [];
+		// Gender is only used to filter matches, so it is not shown here.
 		return [
 			{ label: t('swiping.infoMeaning'), value: d.meaning },
-			{ label: t('swiping.infoOrigin'), value: d.origin },
-			{ label: t('swiping.infoGender'), value: d.gender }
+			{ label: t('swiping.infoOrigin'), value: d.origin }
 		].filter((row) => !!row.value);
 	});
 
@@ -62,6 +62,11 @@
 	const intent = $derived(flyOut !== 0 ? flyOut : Math.abs(dragX) < 35 ? 0 : Math.sign(dragX));
 	const intentStrength = $derived(
 		flyOut !== 0 ? 1 : Math.min(1, Math.abs(dragX) / SWIPE_THRESHOLD)
+	);
+	// Secondary cue: the card's own border picks up the answer's colour.
+	// Empty string removes the custom property, so the default border returns.
+	const swipeTint = $derived(
+		intent > 0 ? 'var(--pico-ok-bg)' : intent < 0 ? 'var(--pico-error-bg)' : ''
 	);
 
 	function onPointerDown(event: PointerEvent) {
@@ -104,7 +109,7 @@
 		pointerId = null;
 
 		if (axis === 'h' && Math.abs(dx) >= SWIPE_THRESHOLD) {
-			commitSwipe(dx > 0, true);
+			commitSwipe(dx > 0);
 		} else {
 			dragX = 0;
 		}
@@ -115,22 +120,13 @@
 
 	/**
 	 * Stamps the card yes/no, animates it off-screen, then records the swipe.
-	 *
-	 * A drag already showed the stamp while the pointer was down, so it flies
-	 * off straight away. The buttons and the arrow keys tilt the card to the
-	 * threshold first and hold for a beat, so every way of answering gives the
-	 * same confirmation.
+	 * The stamp and the border tint come up with the very first frame of the
+	 * fly-out, so a button or a key press reacts as immediately as a drag.
 	 */
-	async function commitSwipe(liked: boolean, fromGesture = false) {
+	async function commitSwipe(liked: boolean) {
 		if (!currentName || flyOut !== 0) return;
-		const direction = liked ? 1 : -1;
 
-		if (!fromGesture) {
-			dragX = direction * SWIPE_THRESHOLD;
-			await wait(200);
-		}
-
-		flyOut = direction;
+		flyOut = liked ? 1 : -1;
 		await wait(260);
 
 		resetting = true;
@@ -268,6 +264,7 @@
 		class:dragging
 		class:resetting
 		style:transform={cardTransform}
+		style:--swipe-tint={swipeTint}
 		onpointerdown={onPointerDown}
 		onpointermove={onPointerMove}
 		onpointerup={onPointerUp}
@@ -348,26 +345,49 @@
 					</span>
 				</article>
 
-				<!-- Back -->
+				<!-- Back: same skeleton as the front, so the flip doesn't move anything.
+				     The info sits exactly where the undo / + info row is. -->
 				<article class="flip-face back flex flex-col items-center justify-center text-center">
-					<p class="m-0 font-title text-2xl font-bold">{info.data?.name ?? currentName?.name}</p>
-					<div class="mt-4 w-full max-w-xs px-4 text-left text-sm">
+					<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
+					<p class="flex h-20 items-center font-title text-4xl font-bold">
+						{info.data?.name ?? currentName?.name}
+					</p>
+
+					<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
 						{#if info.loading}
-							<p class="m-0 text-center text-[var(--pico-muted-color)]">
-								{t('swiping.infoLoading')}
-							</p>
+							<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoLoading')}</p>
 						{:else if infoRows.length > 0}
-							<dl class="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+							<dl class="m-0 grid max-w-xs grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-left text-sm">
 								{#each infoRows as row (row.label)}
 									<dt class="font-bold text-[var(--pico-primary)]">{row.label}</dt>
 									<dd class="m-0 text-balance">{row.value}</dd>
 								{/each}
 							</dl>
 						{:else}
-							<p class="m-0 text-center text-[var(--pico-muted-color)]">{t('swiping.infoNone')}</p>
+							<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoNone')}</p>
 						{/if}
 					</div>
-					<button type="button" class="mt-6 py-1 text-xs font-bold outline" onclick={toggleInfo}>
+
+					<div class="flex space-x-4 pt-4">
+						<button
+							onclick={() => commitSwipe(false)}
+							type="button"
+							disabled={!currentName}
+							class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.no')}</button
+						>
+						<button
+							onclick={() => commitSwipe(true)}
+							type="button"
+							disabled={!currentName}
+							class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.yes')}</button
+						>
+					</div>
+
+					<button
+						type="button"
+						class="mt-4 border-0 bg-transparent py-1 text-xs font-bold text-[var(--pico-accent2)] hover:underline"
+						onclick={toggleInfo}
+					>
 						{t('swiping.hideInfo')}
 					</button>
 				</article>
@@ -470,6 +490,8 @@
 		margin: 0;
 		backface-visibility: hidden;
 		-webkit-backface-visibility: hidden;
+		border-color: var(--swipe-tint, var(--pico-border-color));
+		transition: border-color 150ms ease;
 	}
 	.flip-face.back {
 		transform: rotateY(180deg);
@@ -533,6 +555,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.card-drag,
 		.flip-inner,
+		.flip-face,
 		.badge {
 			transition: none;
 		}
