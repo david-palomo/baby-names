@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { getUser, supabase } from '$lib/supabase';
-	import { Users, Undo, Heart, Settings } from 'lucide-svelte';
+	import { Users, Heart, Settings } from 'lucide-svelte';
 	import { IconBrandTinder } from '@tabler/icons-svelte';
 	import { store } from '$lib/store.svelte';
 	import { fetchState } from '$lib/fetchState.svelte';
@@ -211,18 +211,6 @@
 		}
 	}
 
-	async function handleUndo() {
-		const lastSwipe = swipes.pop();
-		if (!lastSwipe) return;
-
-		await supabase.from('swipes').delete().match({
-			user_id: store.user?.id,
-			babyname_id: lastSwipe.id
-		});
-
-		names.push({ id: lastSwipe.id, name: lastSwipe.name });
-	}
-
 	function putBackInDeck(swipe: SwipedName) {
 		names.push({ id: swipe.id, name: swipe.name });
 	}
@@ -298,19 +286,7 @@
 				{/if}
 			</div>
 
-			<!-- Undo sits beside the pair it undoes, deliberately quieter. The
-			     spacer opposite keeps no/yes centred on the card. -->
 			<div class="flex items-center justify-center gap-2 pt-2 4xs:gap-3">
-				<button
-					type="button"
-					class="undo-btn m-0 flex h-10 w-10 items-center justify-center p-0"
-					title={t('swiping.undo')}
-					aria-label={t('swiping.undo')}
-					disabled={swipes.length === 0}
-					onclick={handleUndo}
-				>
-					<Undo size={18} />
-				</button>
 				<button
 					onclick={() => commitSwipe(false)}
 					type="button"
@@ -323,7 +299,6 @@
 					disabled={!currentName}
 					class="ok-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.yes')}</button
 				>
-				<span class="h-10 w-10" aria-hidden="true"></span>
 			</div>
 
 			<!-- Drag intent badges -->
@@ -375,32 +350,32 @@
 			<h2 class="m-0 flex items-center gap-3 pt-1 text-lg font-bold">
 				<Heart class="text-[var(--pico-error)]" />{t('swiping.previousSwipes')}
 			</h2>
-			{#if swipesState.status === 'success' && swipes.length > 0}
-				<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.changedMind')}</p>
-			{/if}
+			<!-- Always shown, and short enough to stay on one line even at 320px,
+			     so the section is the same height whatever state it is in. -->
+			<p class="m-0 text-xs leading-4 text-[var(--pico-muted-color)]">
+				{t('swiping.reswipeHint')}
+			</p>
 		</div>
-		<div class="flex flex-wrap items-center gap-x-4">
+		<div class="flex min-h-7 flex-wrap items-center gap-2">
 			{#if swipesState.status === 'idle' || swipesState.status === 'loading'}
-				<p class="py-1 text-[var(--pico-muted-color)]">{t('swiping.loadingSwipes')}</p>
+				<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.loadingSwipes')}</p>
 			{:else if swipesState.status === 'error'}
-				<p class="py-1 text-[var(--pico-muted-color)]">
+				<p class="m-0 text-sm text-[var(--pico-muted-color)]">
 					{t('swiping.oops', { message: swipesState.message })}
 				</p>
 			{:else if swipes.length === 0}
-				<p class="py-1 text-[var(--pico-muted-color)]">{t('swiping.noSwipes')}</p>
+				<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.noSwipes')}</p>
 			{:else}
 				{#each swipes.slice(-16).toReversed() as swipe (swipe.id)}
 					<button
-						class="inline border-0 py-1
-							{swipe.liked ? 'text-[var(--pico-ok)]' : 'line-through decoration-2 opacity-50'}
-							hover:text-[var(--pico-accent2)] hover:underline hover:decoration-auto hover:opacity-100"
+						class="swipe-chip {swipe.liked ? 'liked' : 'passed'}"
 						title={t('swipes.undo')}
 						onclick={() => putBackInDeck(swipe)}
 					>
 						{swipe.name}
 					</button>
 				{/each}
-				<a href="/swipes" class="py-1 text-[var(--pico-accent2)] hover:underline"
+				<a href="/swipes" class="px-1 py-1 text-sm text-[var(--pico-accent2)] hover:underline"
 					>{t('swiping.seeMore')}</a
 				>
 			{/if}
@@ -481,16 +456,31 @@
 		transform: rotate(12deg) scale(1.15);
 	}
 
-	.undo-btn {
+	.swipe-chip {
+		margin: 0;
+		width: auto;
+		border: 1px solid var(--pico-border-color-aux);
+		border-radius: 999px;
 		background-color: transparent;
-		border-color: var(--pico-border-color-aux);
-		color: var(--pico-accent2);
+		padding: 0.1rem 0.7rem;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		transition:
+			border-color 120ms ease,
+			color 120ms ease;
 	}
-	.undo-btn:hover:not(:disabled) {
+	.swipe-chip.liked {
+		color: var(--pico-ok);
+	}
+	.swipe-chip.passed {
+		color: var(--pico-muted-color);
+		text-decoration: line-through;
+		text-decoration-thickness: 2px;
+	}
+	.swipe-chip:hover {
 		border-color: var(--pico-accent2);
-	}
-	.undo-btn:disabled {
-		opacity: 0.35;
+		color: var(--pico-accent2);
+		text-decoration: none;
 	}
 
 	.error-btn {
