@@ -350,9 +350,10 @@
 			<h2 class="m-0 flex items-center gap-3 pt-1 text-lg font-bold">
 				<Heart class="text-[var(--pico-error)]" />{t('swiping.previousSwipes')}
 			</h2>
-			<!-- Always shown, and short enough to stay on one line even at 320px,
-			     so the section is the same height whatever state it is in. -->
-			<p class="m-0 text-xs leading-4 text-[var(--pico-muted-color)]">
+			<!-- Always shown, so the section is the same height in every state —
+			     which is also why this is free to wrap on a narrow screen. -->
+			<p class="m-0 text-xs leading-5 text-[var(--pico-muted-color)]">
+				<span class="font-bold text-[var(--pico-accent2)]">{t('swiping.tip')}</span>
 				{t('swiping.reswipeHint')}
 			</p>
 		</div>
