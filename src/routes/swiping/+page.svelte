@@ -40,6 +40,8 @@
 
 	// --- Drag to swipe ---
 	const SWIPE_THRESHOLD = 90;
+	/** Fly-out duration. Shared with the CSS via --fly-ms so they can't drift. */
+	const FLY_MS = 420;
 	let dragX = $state(0);
 	let dragging = $state(false);
 	let flyOut = $state(0); // -1 left, 1 right, 0 resting
@@ -127,7 +129,7 @@
 		if (!currentName || flyOut !== 0) return;
 
 		flyOut = liked ? 1 : -1;
-		await wait(260);
+		await wait(FLY_MS);
 
 		resetting = true;
 		flyOut = 0;
@@ -263,8 +265,10 @@
 		class="card-drag mb-6 max-h-[55vh] min-h-[17.5rem] 2xs:h-[21.5rem]"
 		class:dragging
 		class:resetting
+		class:flying={flyOut !== 0}
 		style:transform={cardTransform}
 		style:--swipe-tint={swipeTint}
+		style:--fly-ms={`${FLY_MS}ms`}
 		onpointerdown={onPointerDown}
 		onpointermove={onPointerMove}
 		onpointerup={onPointerUp}
@@ -458,11 +462,19 @@
 		touch-action: pan-y;
 		cursor: grab;
 	}
+	/* Leaving takes longer than springing back, so the answer has time to read. */
+	.card-drag.flying {
+		transition: transform var(--fly-ms, 420ms) cubic-bezier(0.22, 0.61, 0.36, 1);
+	}
 	.card-drag.dragging {
 		transition: none;
 		cursor: grabbing;
 	}
-	.card-drag.resetting {
+	/* The next name is already on screen by now, so clear the stamp and the
+	   tint instantly - animating them out would flash them over the new card. */
+	.card-drag.resetting,
+	.card-drag.resetting .flip-face,
+	.card-drag.resetting .badge {
 		transition: none;
 	}
 
