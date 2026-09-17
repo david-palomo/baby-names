@@ -5,7 +5,7 @@
 	import { IconBrandTinder } from '@tabler/icons-svelte';
 	import { store } from '$lib/store.svelte';
 	import { fetchState } from '$lib/fetchState.svelte';
-	import type { BabyName, BabyNameInfo, Swipe, SwipedName } from '$lib/types';
+	import type { BabyName, BabyNameInfo, NameMetadata, Swipe, SwipedName } from '$lib/types';
 	import { tick, untrack } from 'svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import { useTranslate } from '$lib/i18n.svelte';
@@ -20,20 +20,17 @@
 
 	const currentName = $derived(names.length > 0 ? names[names.length - 1] : null);
 
-	// --- "+ info": swaps the control row for the name's meaning and origin ---
-	let info = $state<{
-		open: boolean;
-		loading: boolean;
-		forId: number | null;
-		data: BabyNameInfo | null;
-	}>({ open: false, loading: false, forId: null, data: null });
+	// Origin/meaning for every name in the deck, fetched once alongside it so
+	// the card can show it immediately instead of on demand.
+	let meta = $state<Record<number, NameMetadata>>({});
 
-	/** Reads as "(Latin) Young ceremonial attendant". Gender is only used to
-	 * filter matches, so it is not shown here. */
-	const infoLine = $derived.by(() => {
-		const d = info.data;
-		if (!d) return '';
-		return [d.origin ? `(${d.origin})` : '', d.meaning ?? ''].filter(Boolean).join(' ');
+	/** Origin and meaning, kept apart so the origin can carry its own colour. */
+	const infoParts = $derived.by(() => {
+		const entry = currentName ? meta[currentName.id] : null;
+		const origin = entry?.origin?.trim() || '';
+		const meaning = entry?.meaning?.trim() || '';
+		// Gender is only used to filter matches, so it is not shown here.
+		return origin || meaning ? { origin, meaning } : null;
 	});
 
 	// --- Drag to swipe ---
@@ -168,41 +165,32 @@
 		} else {
 			names = data || [];
 			namesState.setSuccess();
+			loadMeta(names.map((n) => n.id));
 		}
 	}
 
 	/**
-	 * Selects `*` rather than the metadata columns by name so the page keeps
-	 * working against a database where 0001_name_metadata.sql hasn't been run.
+	 * Selects `*` rather than naming the metadata columns, so this still
+	 * resolves against a database where 0001_name_metadata.sql hasn't been run
+	 * — the card simply shows no info line in that case.
 	 */
-	async function toggleInfo() {
-		const current = currentName;
-		if (!current) return;
+	async function loadMeta(ids: number[]) {
+		const missing = ids.filter((id) => !(id in meta));
+		if (missing.length === 0) return;
 
-		if (info.open && info.forId === current.id) {
-			info = { ...info, open: false };
-			return;
+		const { data } = await supabase.from('babynames').select('*').in('id', missing);
+		if (!data) return;
+
+		const next = { ...meta };
+		for (const row of data as BabyNameInfo[]) {
+			next[row.id] = { origin: row.origin, meaning: row.meaning };
 		}
-
-		info = { open: true, loading: true, forId: current.id, data: null };
-		const { data } = await supabase
-			.from('babynames')
-			.select('*')
-			.eq('id', current.id)
-			.maybeSingle();
-
-		if (info.forId !== current.id) return;
-		info = { open: true, loading: false, forId: current.id, data };
-	}
-
-	function closeInfo() {
-		info = { open: false, loading: false, forId: null, data: null };
+		meta = next;
 	}
 
 	async function handleSwipe(liked: boolean) {
 		const current = names.pop();
 		if (!current) return;
-		closeInfo();
 
 		const swipe: Swipe = { babyname_id: current.id, liked };
 		const { error } = await supabase.from('swipes').upsert(swipe);
@@ -226,7 +214,6 @@
 	async function handleUndo() {
 		const lastSwipe = swipes.pop();
 		if (!lastSwipe) return;
-		closeInfo();
 
 		await supabase.from('swipes').delete().match({
 			user_id: store.user?.id,
@@ -237,9 +224,14 @@
 	}
 
 	function putBackInDeck(swipe: SwipedName) {
-		closeInfo();
 		names.push({ id: swipe.id, name: swipe.name });
 	}
+
+	$effect(() => {
+		const id = currentName?.id;
+		if (id == null || id in meta) return;
+		untrack(() => loadMeta([id]));
+	});
 
 	$effect(() => {
 		if (store.user) {
@@ -286,69 +278,56 @@
 				{/if}
 			</p>
 
-			<!-- One slot, fixed height: the controls swap for the name's info in
-			     place, so nothing above or below it ever moves. -->
+			<!-- Always-on info line. Fixed height so a name without metadata
+			     leaves the rest of the card exactly where it is. -->
 			<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
-				{#if info.open}
-					{#if info.loading}
-						<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoLoading')}</p>
-					{:else if infoLine}
-						<p class="m-0 max-w-xs text-balance text-sm">{infoLine}</p>
-					{:else}
-						<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoNone')}</p>
-					{/if}
-				{:else}
-					<div class="flex justify-center gap-4">
-						<button
-							type="button"
-							class="m-0 py-1 text-[var(--pico-accent2)] outline"
-							title={t('swiping.undo')}
-							aria-label={t('swiping.undo')}
-							onclick={handleUndo}
-						>
-							<Undo size={20} />
-						</button>
-						<button
-							type="button"
-							class="m-0 py-1 text-xs font-bold outline"
-							aria-expanded={info.open}
-							disabled={!currentName}
-							onclick={toggleInfo}
-						>
-							{t('swiping.info')}
-						</button>
-					</div>
+				{#if infoParts}
+					<!-- Flex rather than inline text, so the gaps either side of the
+					     separator are exactly equal and don't depend on whitespace. -->
+					<p class="m-0 flex max-w-xs flex-wrap items-baseline justify-center gap-x-2 text-sm">
+						{#if infoParts.origin}
+							<span class="font-bold text-[var(--pico-primary)]">{infoParts.origin}</span>
+						{/if}
+						{#if infoParts.origin && infoParts.meaning}
+							<span class="text-[var(--pico-primary)]" aria-hidden="true">|</span>
+						{/if}
+						{#if infoParts.meaning}
+							<span class="text-balance">{infoParts.meaning}</span>
+						{/if}
+					</p>
 				{/if}
 			</div>
 
-			<div class="flex space-x-4 pt-4">
+			<!-- Undo sits beside the pair it undoes, deliberately quieter. The
+			     spacer opposite keeps no/yes centred on the card. -->
+			<div class="flex items-center justify-center gap-2 pt-2 4xs:gap-3">
+				<button
+					type="button"
+					class="undo-btn m-0 flex h-10 w-10 items-center justify-center p-0"
+					title={t('swiping.undo')}
+					aria-label={t('swiping.undo')}
+					disabled={swipes.length === 0}
+					onclick={handleUndo}
+				>
+					<Undo size={18} />
+				</button>
 				<button
 					onclick={() => commitSwipe(false)}
 					type="button"
 					disabled={!currentName}
-					class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.no')}</button
+					class="error-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.no')}</button
 				>
 				<button
 					onclick={() => commitSwipe(true)}
 					type="button"
 					disabled={!currentName}
-					class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.yes')}</button
+					class="ok-btn m-0 w-20 px-4 py-2 text-lg font-bold 4xs:w-24">{t('swiping.yes')}</button
 				>
+				<span class="h-10 w-10" aria-hidden="true"></span>
 			</div>
 
 			<div class="flex h-8 items-center pt-2">
-				{#if info.open}
-					<button
-						type="button"
-						class="m-0 py-1 text-xs font-bold outline"
-						aria-expanded={info.open}
-						onclick={toggleInfo}
-					>
-						{t('swiping.hideInfo')}
-					</button>
-				{:else}
-					<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.swipeHint')}</p>
-				{/if}
+				<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.swipeHint')}</p>
 			</div>
 
 			<!-- Drag intent badges -->
@@ -499,6 +478,18 @@
 	}
 	.badge-no.stamped {
 		transform: rotate(12deg) scale(1.15);
+	}
+
+	.undo-btn {
+		background-color: transparent;
+		border-color: var(--pico-border-color-aux);
+		color: var(--pico-accent2);
+	}
+	.undo-btn:hover:not(:disabled) {
+		border-color: var(--pico-accent2);
+	}
+	.undo-btn:disabled {
+		opacity: 0.35;
 	}
 
 	.error-btn {

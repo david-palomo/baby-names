@@ -52,8 +52,6 @@ const en = {
 	'swiping.errorNames': 'Error loading names!',
 	'swiping.noNamesLeft': 'No names left!',
 	'swiping.undo': 'Undo last swipe',
-	'swiping.info': '+ info',
-	'swiping.hideInfo': '- info',
 	'swiping.swipeHint': 'Drag the card, or use the buttons',
 	'swiping.no': 'no',
 	'swiping.yes': 'yes',
@@ -65,8 +63,6 @@ const en = {
 	'swiping.oops': 'Oops! {message} 👀',
 	'swiping.noSwipes': 'No previous swipes found.',
 	'swiping.seeMore': '... see more',
-	'swiping.infoLoading': 'Looking it up...',
-	'swiping.infoNone': 'No extra info for this name yet.',
 
 	// Matches
 	'matches.title': 'Matches',
@@ -222,8 +218,6 @@ const es: Record<MessageKey, string> = {
 	'swiping.errorNames': '¡Error al cargar los nombres!',
 	'swiping.noNamesLeft': '¡No quedan nombres!',
 	'swiping.undo': 'Deshacer el último swipe',
-	'swiping.info': '+ info',
-	'swiping.hideInfo': '- info',
 	'swiping.swipeHint': 'Arrastra la tarjeta, o usa los botones',
 	'swiping.no': 'no',
 	'swiping.yes': 'sí',
@@ -235,8 +229,6 @@ const es: Record<MessageKey, string> = {
 	'swiping.oops': '¡Ups! {message} 👀',
 	'swiping.noSwipes': 'Todavía no has hecho ningún swipe.',
 	'swiping.seeMore': '... ver más',
-	'swiping.infoLoading': 'Buscando...',
-	'swiping.infoNone': 'Todavía no hay más info de este nombre.',
 
 	'matches.title': 'Coincidencias',
 	'matches.partner': 'Pareja',
