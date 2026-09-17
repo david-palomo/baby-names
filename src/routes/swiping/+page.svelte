@@ -20,7 +20,7 @@
 
 	const currentName = $derived(names.length > 0 ? names[names.length - 1] : null);
 
-	// --- "+ info": flips the card. The card never changes size. ---
+	// --- "+ info": swaps the control row for the name's meaning and origin ---
 	let info = $state<{
 		open: boolean;
 		loading: boolean;
@@ -28,14 +28,12 @@
 		data: BabyNameInfo | null;
 	}>({ open: false, loading: false, forId: null, data: null });
 
-	const infoRows = $derived.by(() => {
+	/** Reads as "(Latin) Young ceremonial attendant". Gender is only used to
+	 * filter matches, so it is not shown here. */
+	const infoLine = $derived.by(() => {
 		const d = info.data;
-		if (!d) return [];
-		// Gender is only used to filter matches, so it is not shown here.
-		return [
-			{ label: t('swiping.infoMeaning'), value: d.meaning },
-			{ label: t('swiping.infoOrigin'), value: d.origin }
-		].filter((row) => !!row.value);
+		if (!d) return '';
+		return [d.origin ? `(${d.origin})` : '', d.meaning ?? ''].filter(Boolean).join(' ');
 	});
 
 	// --- Drag to swipe ---
@@ -72,7 +70,7 @@
 	);
 
 	function onPointerDown(event: PointerEvent) {
-		if (!currentName || info.open || flyOut !== 0) return;
+		if (!currentName || flyOut !== 0) return;
 		// Let the buttons inside the card work normally.
 		if ((event.target as HTMLElement).closest('button, a')) return;
 		pointerId = event.pointerId;
@@ -140,7 +138,7 @@
 	}
 
 	function onKeyDown(event: KeyboardEvent) {
-		if (info.open || !currentName) return;
+		if (!currentName) return;
 		if (event.key === 'ArrowRight') commitSwipe(true);
 		else if (event.key === 'ArrowLeft') commitSwipe(false);
 	}
@@ -260,7 +258,7 @@
 <BackButton href="/" />
 
 <div in:fly={{ x: store.transitionDirection * 20, duration: 300 }}>
-	<!-- Fixed height: the flip happens inside, so the card never resizes. -->
+	<!-- Fixed height, so nothing reflows when the info slot swaps. -->
 	<div
 		class="card-drag mb-6 max-h-[55vh] min-h-[17.5rem] 2xs:h-[21.5rem]"
 		class:dragging
@@ -273,29 +271,37 @@
 		onpointermove={onPointerMove}
 		onpointerup={onPointerUp}
 		onpointercancel={onPointerUp}
-		role="group"
-		aria-label={t('swiping.question')}
 	>
-		<div class="flip-scene">
-			<div class="flip-inner" class:flipped={info.open}>
-				<!-- Front -->
-				<article class="flip-face flex flex-col items-center justify-center text-center">
-					<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
-					<p class="flex h-20 items-center font-title text-4xl font-bold">
-						{#if namesState.status === 'idle' || namesState.status === 'loading'}
-							...
-						{:else if namesState.status === 'error'}
-							<span class="text-base text-[var(--pico-error)]">{t('swiping.errorNames')}</span>
-						{:else if currentName}
-							{currentName.name}
-						{:else}
-							{t('swiping.noNamesLeft')}
-						{/if}
-					</p>
-					<div class="flex w-full justify-center gap-4">
+		<article class="card-face flex flex-col items-center justify-center text-center">
+			<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
+			<p class="flex h-20 items-center font-title text-4xl font-bold">
+				{#if namesState.status === 'idle' || namesState.status === 'loading'}
+					...
+				{:else if namesState.status === 'error'}
+					<span class="text-base text-[var(--pico-error)]">{t('swiping.errorNames')}</span>
+				{:else if currentName}
+					{currentName.name}
+				{:else}
+					{t('swiping.noNamesLeft')}
+				{/if}
+			</p>
+
+			<!-- One slot, fixed height: the controls swap for the name's info in
+			     place, so nothing above or below it ever moves. -->
+			<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
+				{#if info.open}
+					{#if info.loading}
+						<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoLoading')}</p>
+					{:else if infoLine}
+						<p class="m-0 max-w-xs text-balance text-sm">{infoLine}</p>
+					{:else}
+						<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoNone')}</p>
+					{/if}
+				{:else}
+					<div class="flex justify-center gap-4">
 						<button
 							type="button"
-							class="py-1 text-[var(--pico-accent2)] outline"
+							class="m-0 py-1 text-[var(--pico-accent2)] outline"
 							title={t('swiping.undo')}
 							aria-label={t('swiping.undo')}
 							onclick={handleUndo}
@@ -304,7 +310,7 @@
 						</button>
 						<button
 							type="button"
-							class="py-1 text-xs font-bold outline"
+							class="m-0 py-1 text-xs font-bold outline"
 							aria-expanded={info.open}
 							disabled={!currentName}
 							onclick={toggleInfo}
@@ -312,91 +318,57 @@
 							{t('swiping.info')}
 						</button>
 					</div>
-					<div class="flex space-x-4 pt-4">
-						<button
-							onclick={() => commitSwipe(false)}
-							type="button"
-							disabled={!currentName}
-							class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.no')}</button
-						>
-						<button
-							onclick={() => commitSwipe(true)}
-							type="button"
-							disabled={!currentName}
-							class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.yes')}</button
-						>
-					</div>
-					<p class="swipe-hint m-0 pt-4 text-xs text-[var(--pico-muted-color)]">
-						{t('swiping.swipeHint')}
-					</p>
+				{/if}
+			</div>
 
-					<!-- Drag intent badges -->
-					<span
-						class="badge badge-yes"
-						class:stamped={flyOut !== 0}
-						aria-hidden="true"
-						style:opacity={intent > 0 ? intentStrength : 0}
-					>
-						{t('swiping.yes')}
-					</span>
-					<span
-						class="badge badge-no"
-						class:stamped={flyOut !== 0}
-						aria-hidden="true"
-						style:opacity={intent < 0 ? intentStrength : 0}
-					>
-						{t('swiping.no')}
-					</span>
-				</article>
+			<div class="flex space-x-4 pt-4">
+				<button
+					onclick={() => commitSwipe(false)}
+					type="button"
+					disabled={!currentName}
+					class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.no')}</button
+				>
+				<button
+					onclick={() => commitSwipe(true)}
+					type="button"
+					disabled={!currentName}
+					class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.yes')}</button
+				>
+			</div>
 
-				<!-- Back: same skeleton as the front, so the flip doesn't move anything.
-				     The info sits exactly where the undo / + info row is. -->
-				<article class="flip-face back flex flex-col items-center justify-center text-center">
-					<p class="text-lg text-[var(--pico-muted-color)]">{t('swiping.question')}</p>
-					<p class="flex h-20 items-center font-title text-4xl font-bold">
-						{info.data?.name ?? currentName?.name}
-					</p>
-
-					<div class="flex min-h-[2.75rem] w-full items-center justify-center px-6">
-						{#if info.loading}
-							<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoLoading')}</p>
-						{:else if infoRows.length > 0}
-							<dl class="m-0 grid max-w-xs grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-left text-sm">
-								{#each infoRows as row (row.label)}
-									<dt class="font-bold text-[var(--pico-primary)]">{row.label}</dt>
-									<dd class="m-0 text-balance">{row.value}</dd>
-								{/each}
-							</dl>
-						{:else}
-							<p class="m-0 text-sm text-[var(--pico-muted-color)]">{t('swiping.infoNone')}</p>
-						{/if}
-					</div>
-
-					<div class="flex space-x-4 pt-4">
-						<button
-							onclick={() => commitSwipe(false)}
-							type="button"
-							disabled={!currentName}
-							class="error-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.no')}</button
-						>
-						<button
-							onclick={() => commitSwipe(true)}
-							type="button"
-							disabled={!currentName}
-							class="ok-btn m-0 w-24 px-4 py-2 text-lg font-bold">{t('swiping.yes')}</button
-						>
-					</div>
-
+			<div class="flex h-8 items-center pt-2">
+				{#if info.open}
 					<button
 						type="button"
-						class="mt-4 border-0 bg-transparent py-1 text-xs font-bold text-[var(--pico-accent2)] hover:underline"
+						class="m-0 py-1 text-xs font-bold outline"
+						aria-expanded={info.open}
 						onclick={toggleInfo}
 					>
 						{t('swiping.hideInfo')}
 					</button>
-				</article>
+				{:else}
+					<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.swipeHint')}</p>
+				{/if}
 			</div>
-		</div>
+
+			<!-- Drag intent badges -->
+			<span
+				class="badge badge-yes"
+				class:stamped={flyOut !== 0}
+				aria-hidden="true"
+				style:opacity={intent > 0 ? intentStrength : 0}
+			>
+				{t('swiping.yes')}
+			</span>
+			<span
+				class="badge badge-no"
+				class:stamped={flyOut !== 0}
+				aria-hidden="true"
+				style:opacity={intent < 0 ? intentStrength : 0}
+			>
+				{t('swiping.no')}
+			</span>
+		</article>
 	</div>
 
 	<div class="mb-6 flex gap-4">
@@ -461,6 +433,9 @@
 		transition: transform 260ms ease-out;
 		touch-action: pan-y;
 		cursor: grab;
+		/* Dragging a card shouldn't start a text selection. */
+		-webkit-user-select: none;
+		user-select: none;
 	}
 	/* Leaving takes longer than springing back, so the answer has time to read. */
 	.card-drag.flying {
@@ -473,7 +448,7 @@
 	/* The next name is already on screen by now, so clear the stamp and the
 	   tint instantly - animating them out would flash them over the new card. */
 	.card-drag.resetting,
-	.card-drag.resetting .flip-face,
+	.card-drag.resetting .card-face,
 	.card-drag.resetting .badge {
 		transition: none;
 	}
@@ -481,32 +456,12 @@
 	.card-drag {
 		position: relative;
 	}
-	.flip-scene {
-		position: absolute;
-		inset: 0;
-		perspective: 1200px;
-	}
-	.flip-inner {
-		position: relative;
-		height: 100%;
-		width: 100%;
-		transform-style: preserve-3d;
-		transition: transform 500ms;
-	}
-	.flip-inner.flipped {
-		transform: rotateY(180deg);
-	}
-	.flip-face {
+	.card-face {
 		position: absolute;
 		inset: 0;
 		margin: 0;
-		backface-visibility: hidden;
-		-webkit-backface-visibility: hidden;
 		border-color: var(--swipe-tint, var(--pico-border-color));
 		transition: border-color 150ms ease;
-	}
-	.flip-face.back {
-		transform: rotateY(180deg);
 	}
 
 	.badge {
@@ -566,8 +521,7 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		.card-drag,
-		.flip-inner,
-		.flip-face,
+		.card-face,
 		.badge {
 			transition: none;
 		}

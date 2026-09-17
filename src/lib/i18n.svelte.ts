@@ -53,7 +53,7 @@ const en = {
 	'swiping.noNamesLeft': 'No names left!',
 	'swiping.undo': 'Undo last swipe',
 	'swiping.info': '+ info',
-	'swiping.hideInfo': 'back',
+	'swiping.hideInfo': '- info',
 	'swiping.swipeHint': 'Drag the card, or use the buttons',
 	'swiping.no': 'no',
 	'swiping.yes': 'yes',
@@ -67,8 +67,6 @@ const en = {
 	'swiping.seeMore': '... see more',
 	'swiping.infoLoading': 'Looking it up...',
 	'swiping.infoNone': 'No extra info for this name yet.',
-	'swiping.infoOrigin': 'Origin',
-	'swiping.infoMeaning': 'Meaning',
 
 	// Matches
 	'matches.title': 'Matches',
@@ -225,7 +223,7 @@ const es: Record<MessageKey, string> = {
 	'swiping.noNamesLeft': '¡No quedan nombres!',
 	'swiping.undo': 'Deshacer el último swipe',
 	'swiping.info': '+ info',
-	'swiping.hideInfo': 'volver',
+	'swiping.hideInfo': '- info',
 	'swiping.swipeHint': 'Arrastra la tarjeta, o usa los botones',
 	'swiping.no': 'no',
 	'swiping.yes': 'sí',
@@ -239,8 +237,6 @@ const es: Record<MessageKey, string> = {
 	'swiping.seeMore': '... ver más',
 	'swiping.infoLoading': 'Buscando...',
 	'swiping.infoNone': 'Todavía no hay más info de este nombre.',
-	'swiping.infoOrigin': 'Origen',
-	'swiping.infoMeaning': 'Significado',
 
 	'matches.title': 'Coincidencias',
 	'matches.partner': 'Pareja',

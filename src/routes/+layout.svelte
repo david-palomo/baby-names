@@ -154,6 +154,11 @@
 	.wrapper {
 		min-height: 100vh;
 		min-height: 100dvh;
+		/* A card dragged or flung past the edge must not widen the page.
+		   `clip` rather than `hidden` so this never becomes a scroll
+		   container (which would break sticky/anchored children). */
+		overflow-x: hidden;
+		overflow-x: clip;
 	}
 	.lang-select {
 		padding-right: 2rem;
