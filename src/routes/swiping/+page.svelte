@@ -326,10 +326,6 @@
 				<span class="h-10 w-10" aria-hidden="true"></span>
 			</div>
 
-			<div class="flex h-8 items-center pt-2">
-				<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.swipeHint')}</p>
-			</div>
-
 			<!-- Drag intent badges -->
 			<span
 				class="badge badge-yes"
@@ -375,9 +371,14 @@
 	</div>
 
 	<article class="flex w-full flex-col gap-4 p-6 sm:px-8">
-		<h2 class="flex items-center gap-3 pt-1 text-lg font-bold">
-			<Heart class="text-[var(--pico-error)]" />{t('swiping.previousSwipes')}
-		</h2>
+		<div class="flex flex-col gap-1">
+			<h2 class="m-0 flex items-center gap-3 pt-1 text-lg font-bold">
+				<Heart class="text-[var(--pico-error)]" />{t('swiping.previousSwipes')}
+			</h2>
+			{#if swipesState.status === 'success' && swipes.length > 0}
+				<p class="m-0 text-xs text-[var(--pico-muted-color)]">{t('swiping.changedMind')}</p>
+			{/if}
+		</div>
 		<div class="flex flex-wrap items-center gap-x-4">
 			{#if swipesState.status === 'idle' || swipesState.status === 'loading'}
 				<p class="py-1 text-[var(--pico-muted-color)]">{t('swiping.loadingSwipes')}</p>
